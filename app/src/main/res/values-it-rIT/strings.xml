@@ -72,6 +72,13 @@
     <string name="clock_position_right">Destra</string>
     <string name="clock_size_title">Grandezza font orologio</string>
     <string name="clock_padding_title">Spazio extra dell\'orologio</string>
+    <string name="clock_date_title">Data</string>
+    <string name="clock_date_off">Nascosta</string>
+    <string name="clock_date_small">Piccola</string>
+    <string name="clock_date_normal">Normale</string>
+    <string name="clock_date_position_title">Posizione data</string>
+    <string name="clock_date_before">Prima dell\'orologio</string>
+    <string name="clock_date_after">Dopo l\'orologio</string>
     <string name="clock_color_title">Colore personalizzato orologio</string>
     <string name="clock_color_summary">Sovrascrive il colore del testo dell\'orologio</string>
 
@@ -88,13 +95,6 @@
     <string name="clock_ampm_normal">Normale</string>
     <string name="clock_ampm_small">Piccolo (70%)</string>
     <string name="clock_ampm_hidden">Nascosto</string>
-    <string name="clock_date_title">Data</string>
-    <string name="clock_date_off">Nascosta</string>
-    <string name="clock_date_small">Piccola</string>
-    <string name="clock_date_normal">Normale</string>
-    <string name="clock_date_position_title">Posizione data</string>
-    <string name="clock_date_before">Prima dell\'orologio</string>
-    <string name="clock_date_after">Dopo l\'orologio</string>
     <string name="clock_section_advanced">Avanzate (sovrascrive le impostazioni precedenti)</string>
     <string name="clock_before_text">Testo personalizzato prima dell\'orologio</string>
     <string name="clock_after_text">Testo personalizzato dopo l\'orologio</string>

@@ -124,7 +124,11 @@ public class DstDialogStyle {
 
     // ── Drawable factory ──────────────────────────────────────────────────────
 
-    private static Drawable buildDrawable(String preset, int accent, int bg, float density) {
+    /**
+     * Public entry point — called from StatusbarFragment to apply the preset to
+     * our own in-app dialog. The Xposed hook uses the private overload below.
+     */
+    public static Drawable buildDrawable(String preset, int accent, int bg, float density) {
         float corner = 14f * density;
         int   stroke = Math.round(1.5f * density);
 
