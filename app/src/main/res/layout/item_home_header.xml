@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingTop="32dp"
+    android:paddingBottom="8dp">
+
+    <!-- App icon -->
+    <ImageView
+        android:id="@+id/headerIcon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@mipmap/ic_launcher_round"
+        android:contentDescription="" />
+
+    <!-- App name -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="sans-serif-black"
+        android:letterSpacing="0.15"
+        android:text="OBSIDIAN"
+        android:textAllCaps="true"
+        android:textColor="@color/obs_primary"
+        android:textSize="26sp" />
+
+    <!-- Tagline -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="sans-serif"
+        android:letterSpacing="0.05"
+        android:text="OOS 16 · OnePlus 12"
+        android:textColor="#66FFFFFF"
+        android:textSize="12sp" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="2dp"
+        android:layout_marginTop="20dp"
+        android:background="@color/obs_primary"
+        android:alpha="0.4" />
+
+</LinearLayout>

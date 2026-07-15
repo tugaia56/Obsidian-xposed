@@ -1,0 +1,11 @@
+# Keystore and signing secrets — NEVER commit these
+keystore.properties
+*.jks
+*.keystore
+
+# Android build outputs
+/build/
+app/build/
+
+# Local config
+local.properties

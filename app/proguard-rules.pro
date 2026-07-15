@@ -1,0 +1,5 @@
+-keep class de.robv.android.xposed.** { *; }
+-keep class it.tugaia56.obsidian.xposed.** { *; }
+-keep @interface android.annotation.Keep
+-keep @android.annotation.Keep class * { *; }
+-dontwarn de.robv.android.xposed.**

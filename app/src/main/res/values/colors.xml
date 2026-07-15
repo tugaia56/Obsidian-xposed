@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="obs_primary">#908dff</color>
+    <color name="obs_primary_variant">#7574e2</color>
+    <color name="obs_secondary">#908dff</color>
+    <color name="obs_background">#1b2029</color>
+    <color name="obs_surface">#1b2029</color>
+    <color name="obs_on_primary">#FFFFFFFF</color>
+    <color name="obs_on_background">#FFFFFFFF</color>
+    <color name="obs_on_surface">#FFFFFFFF</color>
+</resources>

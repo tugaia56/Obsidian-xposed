@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Obsidian" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/obs_primary</item>
+        <item name="colorPrimaryVariant">@color/obs_primary_variant</item>
+        <item name="colorSecondary">@color/obs_secondary</item>
+        <item name="android:statusBarColor">@color/obs_background</item>
+        <item name="android:navigationBarColor">@color/obs_background</item>
+    </style>
+    <style name="Theme.Obsidian.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+</resources>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Obsidian</string>
+    <string name="loading_dialog_wait">Attendere…</string>
+    <string name="dst_title">Dark Shadow Theme</string>
+    <string name="dst_description">Personalizza i colori accento tramite FabricatedOverlay</string>
+    <string name="enabled">Abilitato</string>
+    <string name="disabled">Disabilitato</string>
+    <string name="reset">Ripristina</string>
+    <string name="close">Esci</string>
+    <string name="apply">Applica</string>
+    <string name="cancel">Annulla</string>
+    <string name="pick_color">Scegli colore</string>
+    <string name="section_accent1">Accento Principale</string>
+    <string name="section_accent2">Accento Chiaro</string>
+    <string name="section_accent3">Ripple / Ombra</string>
+    <string name="dst_section_preset_accent">Preset Accento</string>
+    <string name="dst_section_preset_sfondo">Preset Sfondo</string>
+
+    <!-- Sezione PIN -->
+    <string name="section_pin_style">Tastierino PIN</string>
+    <string name="pin_style_default">Predefinito</string>
+    <string name="pin_style_accent">Accento</string>
+    <string name="pin_style_accent_shade">Accento sfumato</string>
+    <string name="pin_style_custom">Personalizzato</string>
+    <string name="section_pin_bg_style">PIN Colore Sfondo</string>
+    <string name="section_pin_num_style">PIN Colore Numeri</string>
+
+    <!-- Home nav menu -->
+    <string name="nav_dst_colors">Dark Shadow Theme</string>
+    <string name="nav_dst_colors_summary">Accento, colori di sfondo</string>
+    <string name="nav_quick_settings">Impostazioni rapide</string>
+    <string name="nav_quick_settings_summary">Sfondo QS solido</string>
+    <string name="nav_lock_screen">Schermata di Blocco</string>
+    <string name="nav_lock_screen_summary">Colori sfondo e numeri PIN</string>
+    <string name="nav_statusbar">Barra di Stato</string>
+    <string name="nav_statusbar_summary">Icone, frecce, notifiche</string>
+
+    <!-- DST sections and new items -->
+    <string name="dst_section_colors">Colori</string>
+    <string name="dst_section_qs">Impostazioni rapide</string>
+    <string name="dst_background">Sfondo</string>
+    <string name="dst_qs_solid_bg">Sfondo QS Solido</string>
+    <string name="dst_qs_solid_bg_summary">Sostituisce la sfocatura QS con il colore di sfondo DST</string>
+
+    <!-- Status bar icon mods -->
+    <string name="hide_bluetooth_disconnected">Nascondi Bluetooth quando disconnesso</string>
+    <string name="hide_bluetooth_disconnected_summary">Nasconde l\'icona Bluetooth se attivo ma non connesso a dispositivi</string>
+    <string name="hide_inout_wifi">Nascondi frecce attività Wi-Fi</string>
+    <string name="hide_inout_wifi_summary">Nasconde le frecce upload/download accanto all\'icona Wi-Fi</string>
+    <string name="hide_inout_mobile">Nascondi frecce attività dati mobili</string>
+    <string name="hide_inout_mobile_summary">Nasconde le frecce upload/download accanto all\'icona del segnale mobile</string>
+    <string name="double_tap_sleep_statusbar">Doppio tap barra di stato per spegnere</string>
+    <string name="double_tap_sleep_statusbar_summary">Doppio tap sulla barra di stato per spegnere lo schermo</string>
+
+    <!-- Status bar sections -->
+    <string name="section_statusbar">Barra di stato</string>
+    <string name="section_statusbar_icon_color">Colore icone barra di stato</string>
+    <string name="section_statusbar_icon_color_summary">Colore personalizzato per icone, batteria e orologio</string>
+    <string name="section_statusbar_icons">Icone</string>
+    <string name="section_statusbar_icons_summary">Nascondi Bluetooth, frecce Wi-Fi e dati mobili</string>
+    <string name="section_statusbar_notifs">Notifiche</string>
+    <string name="section_statusbar_notifs_summary">Rimuovi notifiche USB, batteria e carica</string>
+    <string name="section_clock_date">Orologio &amp; Calendario</string>
+    <string name="nav_clock_date">Ora &amp; Data</string>
+    <string name="nav_clock_date_summary">Formato orologio e stile data</string>
+
+    <!-- Ora & Data options (ClockDateFragment) -->
+    <string name="clock_position_title">Posizione orologio</string>
+    <string name="clock_position_left">Sinistra</string>
+    <string name="clock_position_center">Centro</string>
+    <string name="clock_position_right">Destra</string>
+    <string name="clock_size_title">Grandezza font orologio</string>
+    <string name="clock_padding_title">Spazio extra dell\'orologio</string>
+    <string name="clock_color_title">Colore personalizzato orologio</string>
+    <string name="clock_color_summary">Sovrascrive il colore del testo dell\'orologio</string>
+
+    <!-- Sotto-sezione Ora & data (ClockOraDataFragment) -->
+    <string name="clock_section_hide">Nascondi orologio</string>
+    <string name="clock_hide_launcher">Nascondi quando il launcher è visibile</string>
+    <string name="clock_hide_launcher_summary">Nasconde l\'orologio quando la schermata Home è aperta</string>
+    <string name="clock_hide_auto">Nascondi automaticamente</string>
+    <string name="clock_hide_auto_summary">Nasconde l\'orologio ad intervalli regolari</string>
+    <string name="clock_section_format">Impostazioni formato</string>
+    <string name="clock_show_seconds">Mostra secondi</string>
+    <string name="clock_show_seconds_summary">Mostra i secondi nell\'orologio della barra di stato</string>
+    <string name="clock_ampm_title">Stile AM/PM</string>
+    <string name="clock_ampm_normal">Normale</string>
+    <string name="clock_ampm_small">Piccolo (70%)</string>
+    <string name="clock_ampm_hidden">Nascosto</string>
+    <string name="clock_date_title">Data</string>
+    <string name="clock_date_off">Nascosta</string>
+    <string name="clock_date_small">Piccola</string>
+    <string name="clock_date_normal">Normale</string>
+    <string name="clock_date_position_title">Posizione data</string>
+    <string name="clock_date_before">Prima dell\'orologio</string>
+    <string name="clock_date_after">Dopo l\'orologio</string>
+    <string name="clock_section_advanced">Avanzate (sovrascrive le impostazioni precedenti)</string>
+    <string name="clock_before_text">Testo personalizzato prima dell\'orologio</string>
+    <string name="clock_after_text">Testo personalizzato dopo l\'orologio</string>
+    <string name="clock_text_small">Più piccolo (70%)</string>
+    <string name="clock_text_small_summary">Mostra questo testo al 70% della dimensione</string>
+    <string name="none">Nessuno</string>
+    <string name="remove_usb_dialog">Rimuovi dialogo USB</string>
+    <string name="remove_usb_dialog_summary">Seleziona silenziosamente "Nessun trasferimento" alla connessione USB</string>
+    <string name="remove_low_battery">Rimuovi notifica batteria scarica</string>
+    <string name="remove_low_battery_summary">Nasconde dialogo e notifica di batteria scarica</string>
+    <string name="remove_charging_complete">Rimuovi notifica carica completata</string>
+    <string name="remove_charging_complete_summary">Nasconde la notifica "Carica completata"</string>
+    <string name="remove_flashlight_notif">Rimuovi notifica torcia</string>
+    <string name="remove_flashlight_notif_summary">Nasconde la notifica della torcia accesa</string>
+    <string name="remove_dev_mode_notif">Rimuovi notifica sviluppatore</string>
+    <string name="remove_dev_mode_notif_summary">Nasconde la notifica della modalità sviluppatore attiva</string>
+    <string name="restart_systemui">Riavvia SystemUI</string>
+    <string name="restart_systemui_toast">Riavvio SystemUI in corso…</string>
+
+    <!-- Impostazioni app -->
+    <string name="nav_settings">Impostazioni</string>
+    <string name="nav_settings_summary">Backup, ripristino e cancellazione preferenze</string>
+    <string name="settings_section">Preferenze</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_summary">Esporta tutte le impostazioni in un file JSON</string>
+    <string name="settings_restore">Ripristino</string>
+    <string name="settings_restore_summary">Importa le impostazioni da un file di backup</string>
+    <string name="settings_clear">Cancella tutto</string>
+    <string name="settings_clear_summary">Rimuovi tutte le preferenze salvate</string>
+    <string name="settings_clear_confirm">Rimuovere tutte le preferenze salvate? L\'operazione non è reversibile.</string>
+    <string name="settings_restore_not_found">File di backup non trovato — esegui prima un backup</string>
+    <string name="settings_folder">Cartella Backup</string>
+    <string name="settings_folder_default">Spazio app (predefinito)</string>
+    <string name="settings_folder_summary_fmt">Cartella: %s</string>
+    <string name="settings_backup_ok">Backup salvato</string>
+    <string name="settings_restore_ok">Preferenze ripristinate — riavvia SystemUI per applicare</string>
+    <string name="settings_clear_ok">Preferenze eliminate</string>
+    <string name="settings_error">Operazione fallita</string>
+
+    <!-- System Colors (Impostazioni → Colori → Colore in primo piano) -->
+    <string name="nav_system_colors">Colore Accent Sistema</string>
+    <string name="nav_system_colors_summary">Imposta il colore in primo piano OOS (Impostazioni → Colori)</string>
+    <string name="system_color_tap_hint">Tocca per scegliere un colore</string>
+    <string name="system_color_apply">Applica colore</string>
+    <string name="system_color_applied">Colore applicato — apri Impostazioni → Colori per confermare</string>
+    <string name="system_color_error">Errore durante l\'applicazione del colore</string>
+    <string name="system_color_info_title">Come funziona</string>
+    <string name="system_color_info_body">Imposta il colore "Colori in primo piano → Personalizzato" di OOS. Stesso colore visibile in Impostazioni → Colori → Personalizzato.</string>
+
+    <!-- DST Preset dialogs -->
+    <string name="dst_section_colore_preset">Colore Preset</string>
+    <string name="dst_none">Nessuno</string>
+    <string name="dst_disable">Disabilita</string>
+    <string name="dst_preset_custom">Personalizzato</string>
+    <string name="dst_section_preset_dialog">Preset Stile Dialogo</string>
+    <string name="dst_dlg_ht">Dialogo Alta Trasparenza</string>
+    <string name="dst_dlg_hto">Dialogo Alta Trasparenza con Bordo</string>
+    <string name="dst_dlg_lt">Dialogo Bassa Trasparenza</string>
+    <string name="dst_dlg_lyo">Dialogo Bassa Trasparenza con Bordo</string>
+    <string name="dst_dlg_mt">Dialogo Media Trasparenza</string>
+    <string name="dst_dlg_mto">Dialogo Media Trasparenza con Bordo</string>
+    <string name="dst_dlg_s">Dialogo Solido</string>
+    <string name="dst_dlg_so">Dialogo Solido con Bordo</string>
+</resources>

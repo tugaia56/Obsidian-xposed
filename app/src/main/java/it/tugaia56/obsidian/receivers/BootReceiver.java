@@ -1,0 +1,121 @@
+package it.tugaia56.obsidian.receivers;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+
+import com.topjohnwu.superuser.Shell;
+
+import it.tugaia56.obsidian.utils.Constants;
+import it.tugaia56.obsidian.utils.ModuleConstants;
+import it.tugaia56.obsidian.utils.ObsidianPrefs;
+import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
+
+import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PIN;
+import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PIN_CUSTOM_COLOR;
+import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PIN_NUM;
+import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PIN_NUM_CUSTOM_COLOR;
+import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PREFIX;
+
+/**
+ * Fired on ACTION_BOOT_COMPLETED.
+ *
+ * Two-step persistence strategy (mirrors OC's approach):
+ * 1. Magisk/KSU service.sh runs post-exec.sh early at boot (maintained by FabricatedUtil).
+ * 2. This receiver re-applies after SystemUI is fully up (5s delay), catching any
+ *    case where OOS theme service reset the overlays after service.sh ran.
+ */
+public class BootReceiver extends BroadcastReceiver {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (!Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) return;
+
+        new Thread(() -> {
+            // Wait for OOS theme service to finish its own overlay setup
+            try { Thread.sleep(5000); } catch (InterruptedException ignored) {}
+            reapplyPinBg();
+            reapplyPinNum();
+        }).start();
+    }
+
+    // ── PIN background ────────────────────────────────────────────────────────
+
+    private static void reapplyPinBg() {
+        String pinPref = ObsidianPrefs.getString(PREF_PIN, null);
+        if (pinPref == null || "default".equals(pinPref)) return;
+
+        int accent = ObsidianPrefs.getInt(PREF_PREFIX + "ACCENT1", 0xFFFFFFFF);
+        int color;
+        boolean shade;
+
+        if ("DSTPINCustom".equals(pinPref)) {
+            color = ObsidianPrefs.getInt(PREF_PIN_CUSTOM_COLOR, 0xFFFFFFFF);
+            shade = false;
+        } else {
+            color = accent;
+            shade = "DSTPINAccentShade".equals(pinPref);
+        }
+
+        int rgb    = color & 0x00FFFFFF;
+        int full   = 0xFF000000 | rgb;
+        int ripple = 0x80000000 | rgb;
+        int outer1 = 0xCC000000 | rgb;
+        int outer2 = 0x40000000 | rgb;
+        int outer3 = 0x21000000 | rgb;
+        int shadow = shade ? ripple : full;
+
+        FabricatedUtil.buildAndEnableOverlays(
+            new Object[]{Constants.SYSTEM_UI, "PIN_border",   "color",
+                    "coui_numeric_keyboard_border_color",                        fmt(full)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_inner1",   "color",
+                    "coui_numeric_keyboard_inner_gradient_color_1",              fmt(ripple)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_inner2",   "color",
+                    "coui_numeric_keyboard_inner_gradient_color_2",              fmt(ripple)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_shadow",   "color",
+                    "coui_numeric_keyboard_upper_inner_shadow_color",            fmt(shadow)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_outer1",   "color",
+                    "coui_numeric_keyboard_outer_gradient_color_1",              fmt(outer1)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_outer2",   "color",
+                    "coui_numeric_keyboard_outer_gradient_color_2",              fmt(outer2)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_outer3",   "color",
+                    "coui_numeric_keyboard_outer_gradient_color_3",              fmt(outer3)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_dotfill",  "color",
+                    "coui_simple_lock_transparent_filled_rectangle_icon_color",  fmt(full)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_dotout",   "color",
+                    "coui_simple_lock_transparent_outlined_rectangle_icon_color","0x33FFFFFF"},
+            new Object[]{Constants.SYSTEM_UI, "PIN_wordtxt",  "color",
+                    "coui_numeric_keyboard_dark_word_text_normal_color",         fmt(full)},
+            new Object[]{Constants.SYSTEM_UI, "PIN_wordtxtL", "color",
+                    "coui_numeric_keyboard_dark_word_text_normal_light_color",   fmt(full)}
+        );
+    }
+
+    // ── PIN number color ──────────────────────────────────────────────────────
+
+    private static void reapplyPinNum() {
+        String preset = ObsidianPrefs.getString(PREF_PIN_NUM, null);
+        if (preset == null || "default".equals(preset)) return;
+
+        int accent = ObsidianPrefs.getInt(PREF_PREFIX + "ACCENT1", 0xFFFFFFFF);
+        int color;
+
+        if ("DSTNUMPINCustom".equals(preset)) {
+            color = ObsidianPrefs.getInt(PREF_PIN_NUM_CUSTOM_COLOR, 0xFFFFFFFF);
+        } else if ("DSTNUMPINAccentShade".equals(preset)) {
+            color = 0x80000000 | (accent & 0x00FFFFFF);
+        } else { // DSTNUMPINAccent
+            color = accent;
+        }
+
+        FabricatedUtil.buildAndEnableOverlays(
+            new Object[]{Constants.SYSTEM_UI, "PIN_NUM_color", "color",
+                    "coui_numeric_keyboard_number_color",
+                    fmt(0xFF000000 | (color & 0x00FFFFFF))}
+        );
+    }
+
+    private static String fmt(int color) {
+        return String.format("0x%08X", 0xFFFFFFFFL & color);
+    }
+}

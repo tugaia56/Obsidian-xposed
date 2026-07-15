@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Checked: app primary color (purple) — always visible -->
+    <item android:state_checked="true" android:color="@color/obs_primary" />
+    <!-- Unchecked: translucent white — visible on any dark background -->
+    <item android:color="#66FFFFFF" />
+</selector>

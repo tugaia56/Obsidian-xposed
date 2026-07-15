@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Background per i dialog in-app di Obsidian.
+  Overlay-able via Substratum (pacchetto it.tugaia56.obsidian).
+  Il colore di default (@*android:color/background_dark) segue la palette DST "Blue Gray Dark".
+  Modifica corner radius e colore in base al tema desiderato.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@*android:color/background_dark" />
+    <stroke android:width="1.5dip" android:color="@*android:color/accent_material_dark" />
+    <corners android:radius="28dp" />
+</shape>

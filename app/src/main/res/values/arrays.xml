@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- LSPosed scope -->
+    <string-array name="xposed_scope">
+        <item>android</item>
+        <item>com.android.systemui</item>
+        <item>com.android.settings</item>
+        <item>com.android.launcher</item>
+    </string-array>
+
+    <!-- DST ACCENT1 resource names (24 entries) -->
+    <string-array name="dst_accent1_res_names">
+        <item>accent_material_dark</item>
+        <item>holo_blue_light</item>
+        <item>system_accent1_100</item>
+        <item>system_accent1_200</item>
+        <item>system_accent1_300</item>
+        <item>system_accent1_400</item>
+        <item>system_accent1_500</item>
+        <item>system_accent1_600</item>
+        <item>system_accent1_700</item>
+        <item>system_accent2_100</item>
+        <item>system_accent2_200</item>
+        <item>system_accent2_300</item>
+        <item>system_accent2_400</item>
+        <item>system_accent2_500</item>
+        <item>system_accent2_600</item>
+        <item>system_accent2_700</item>
+        <item>system_accent3_100</item>
+        <item>system_accent3_200</item>
+        <item>system_accent3_300</item>
+        <item>system_accent3_400</item>
+        <item>system_accent3_500</item>
+        <item>system_accent3_600</item>
+        <item>system_accent3_700</item>
+        <item>system_secondary_container</item>
+    </string-array>
+
+    <!-- PIN Sfondo (background key) style entries -->
+    <string-array name="pin_style_entries">
+        <item>@string/pin_style_default</item>
+        <item>@string/pin_style_accent</item>
+        <item>@string/pin_style_accent_shade</item>
+        <item>@string/pin_style_custom</item>
+    </string-array>
+    <string-array name="pin_style_values">
+        <item>default</item>
+        <item>DSTPINAccent</item>
+        <item>DSTPINAccentShade</item>
+        <item>DSTPINCustom</item>
+    </string-array>
+
+    <!-- PIN Numeri (number text color) style entries -->
+    <string-array name="pin_num_style_entries">
+        <item>@string/pin_style_default</item>
+        <item>@string/pin_style_accent</item>
+        <item>@string/pin_style_accent_shade</item>
+        <item>@string/pin_style_custom</item>
+    </string-array>
+    <string-array name="pin_num_style_values">
+        <item>default</item>
+        <item>DSTNUMPINAccent</item>
+        <item>DSTNUMPINAccentShade</item>
+        <item>DSTNUMPINCustom</item>
+    </string-array>
+
+    <!-- Clock position -->
+    <string-array name="clock_position_entries">
+        <item>@string/clock_position_left</item>
+        <item>@string/clock_position_center</item>
+        <item>@string/clock_position_right</item>
+    </string-array>
+    <string-array name="clock_position_values">
+        <item>2</item>
+        <item>1</item>
+        <item>0</item>
+    </string-array>
+
+    <!-- Clock font size (sp) -->
+    <string-array name="clock_size_entries">
+        <item>12 sp (default)</item>
+        <item>14 sp</item>
+        <item>16 sp</item>
+        <item>18 sp</item>
+        <item>20 sp</item>
+    </string-array>
+    <integer-array name="clock_size_values">
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+    </integer-array>
+
+    <!-- Clock extra padding (dp) -->
+    <string-array name="clock_padding_entries">
+        <item>0 dp (default)</item>
+        <item>4 dp</item>
+        <item>8 dp</item>
+        <item>12 dp</item>
+        <item>16 dp</item>
+    </string-array>
+    <integer-array name="clock_padding_values">
+        <item>0</item>
+        <item>4</item>
+        <item>8</item>
+        <item>12</item>
+        <item>16</item>
+    </integer-array>
+
+    <!-- Date display -->
+    <string-array name="clock_date_entries">
+        <item>@string/clock_date_off</item>
+        <item>@string/clock_date_small</item>
+        <item>@string/clock_date_normal</item>
+    </string-array>
+    <string-array name="clock_date_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <!-- Date position -->
+    <string-array name="clock_date_position_entries">
+        <item>@string/clock_date_before</item>
+        <item>@string/clock_date_after</item>
+    </string-array>
+    <string-array name="clock_date_position_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
+    <!-- AM/PM style -->
+    <string-array name="clock_ampm_entries">
+        <item>@string/clock_ampm_normal</item>
+        <item>@string/clock_ampm_small</item>
+        <item>@string/clock_ampm_hidden</item>
+    </string-array>
+    <string-array name="clock_ampm_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+</resources>

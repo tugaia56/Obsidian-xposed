@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Obsidian</string>
+    <string name="loading_dialog_wait">Please wait…</string>
+    <string name="dst_title">Dark Shadow Theme</string>
+    <string name="dst_description">Customize accent colors via FabricatedOverlay</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="reset">Reset</string>
+    <string name="close">Exit</string>
+    <string name="apply">Apply</string>
+    <string name="cancel">Cancel</string>
+    <string name="pick_color">Pick color</string>
+    <string name="section_accent1">Main Accent</string>
+    <string name="section_accent2">Light Accent</string>
+    <string name="section_accent3">Ripple / Shade</string>
+    <string name="dst_section_preset_accent">Accent Presets</string>
+    <string name="dst_section_preset_sfondo">Background Presets</string>
+
+    <!-- Section PIN -->
+    <string name="section_pin_style">PIN Keyguard</string>
+    <string name="pin_style_default">Default</string>
+    <string name="pin_style_accent">Accent</string>
+    <string name="pin_style_accent_shade">Accent Shade</string>
+    <string name="pin_style_custom">Customize</string>
+    <string name="section_pin_bg_style">PIN Background Color</string>
+    <string name="section_pin_num_style">PIN Numbers Color</string>
+
+    <!-- Home nav menu -->
+    <string name="nav_dst_colors">Dark Shadow Theme</string>
+    <string name="nav_dst_colors_summary">Accent, background color swatches</string>
+    <string name="nav_quick_settings">Quick Settings</string>
+    <string name="nav_quick_settings_summary">Solid QS background</string>
+    <string name="nav_lock_screen">Lock Screen</string>
+    <string name="nav_lock_screen_summary">PIN background and number colors</string>
+    <string name="nav_statusbar">Status Bar</string>
+    <string name="nav_statusbar_summary">Icons, arrows, notifications</string>
+
+    <!-- DST sections and new items -->
+    <string name="dst_section_colors">Colors</string>
+    <string name="dst_section_qs">Quick Settings</string>
+    <string name="dst_background">Background</string>
+    <string name="dst_qs_solid_bg">Solid QS Background</string>
+    <string name="dst_qs_solid_bg_summary">Replaces the QS blur with the DST background color</string>
+
+    <!-- Status bar icon mods -->
+    <string name="hide_bluetooth_disconnected">Hide Bluetooth When Disconnected</string>
+    <string name="hide_bluetooth_disconnected_summary">Hides the Bluetooth icon when enabled but nothing is connected</string>
+    <string name="hide_inout_wifi">Hide Wi-Fi Activity Arrows</string>
+    <string name="hide_inout_wifi_summary">Hides the upload/download arrows next to the Wi-Fi icon</string>
+    <string name="hide_inout_mobile">Hide Mobile Data Activity Arrows</string>
+    <string name="hide_inout_mobile_summary">Hides the upload/download arrows next to the mobile signal icon</string>
+    <string name="double_tap_sleep_statusbar">Double Tap Status Bar to Sleep</string>
+    <string name="double_tap_sleep_statusbar_summary">Double-tap the status bar to turn off the screen</string>
+
+    <!-- Status bar sections -->
+    <string name="section_statusbar">Status Bar</string>
+    <string name="section_statusbar_icon_color">Status Bar Icon Color</string>
+    <string name="section_statusbar_icon_color_summary">Custom color for status bar icons, battery and clock</string>
+    <string name="section_statusbar_icons">Icons</string>
+    <string name="section_statusbar_icons_summary">Hide Bluetooth, Wi-Fi and mobile data arrows</string>
+    <string name="section_statusbar_notifs">Notifications</string>
+    <string name="section_statusbar_notifs_summary">Remove USB, battery and charging notifications</string>
+    <string name="section_clock_date">Clock &amp; Calendar</string>
+    <string name="nav_clock_date">Clock &amp; Date</string>
+    <string name="nav_clock_date_summary">Clock format and date style</string>
+
+    <!-- Clock & Date options -->
+    <string name="clock_position_title">Clock Position</string>
+    <string name="clock_position_left">Left</string>
+    <string name="clock_position_center">Center</string>
+    <string name="clock_position_right">Right</string>
+    <string name="clock_size_title">Clock Font Size</string>
+    <string name="clock_padding_title">Clock Extra Padding</string>
+    <string name="clock_date_title">Date Display</string>
+    <string name="clock_date_off">Off</string>
+    <string name="clock_date_small">Small</string>
+    <string name="clock_date_normal">Normal</string>
+    <string name="clock_date_position_title">Date Position</string>
+    <string name="clock_date_before">Before clock</string>
+    <string name="clock_date_after">After clock</string>
+    <string name="clock_color_title">Custom Clock Color</string>
+    <string name="clock_color_summary">Override the clock text color</string>
+
+    <!-- Clock Ora & Data sub-screen -->
+    <string name="clock_section_hide">Hide Clock</string>
+    <string name="clock_hide_launcher">Hide when launcher is visible</string>
+    <string name="clock_hide_launcher_summary">Hides the clock when the home screen is shown</string>
+    <string name="clock_hide_auto">Auto-hide at intervals</string>
+    <string name="clock_hide_auto_summary">Periodically hides the clock for a few seconds</string>
+    <string name="clock_section_format">Format Settings</string>
+    <string name="clock_show_seconds">Show Seconds</string>
+    <string name="clock_show_seconds_summary">Show seconds in the status bar clock</string>
+    <string name="clock_ampm_title">AM/PM Style</string>
+    <string name="clock_ampm_normal">Normal</string>
+    <string name="clock_ampm_small">Small (70%)</string>
+    <string name="clock_ampm_hidden">Hidden</string>
+    <string name="clock_section_advanced">Advanced (overrides other settings)</string>
+    <string name="clock_before_text">Custom text before clock</string>
+    <string name="clock_after_text">Custom text after clock</string>
+    <string name="clock_text_small">Smaller (70%)</string>
+    <string name="clock_text_small_summary">Display this text at 70% size</string>
+    <string name="none">None</string>
+    <string name="remove_usb_dialog">Remove USB Dialog</string>
+    <string name="remove_usb_dialog_summary">Silently selects "No data transfer" on USB connect</string>
+    <string name="remove_low_battery">Remove Low Battery Notification</string>
+    <string name="remove_low_battery_summary">Hides low battery warning dialogs and notifications</string>
+    <string name="remove_charging_complete">Remove Charging Complete Notification</string>
+    <string name="remove_charging_complete_summary">Hides the "Charging complete" notification</string>
+    <string name="remove_flashlight_notif">Remove Flashlight Notification</string>
+    <string name="remove_flashlight_notif_summary">Hides the flashlight-is-on notification</string>
+    <string name="remove_dev_mode_notif">Remove Developer Mode Notification</string>
+    <string name="remove_dev_mode_notif_summary">Hides the developer mode active notification</string>
+    <string name="restart_systemui">Restart SystemUI</string>
+    <string name="restart_systemui_toast">Restarting SystemUI…</string>
+
+    <!-- App settings -->
+    <string name="nav_settings">Settings</string>
+    <string name="nav_settings_summary">Backup, restore and reset preferences</string>
+    <string name="settings_section">Preferences</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_summary">Export all settings to a JSON file</string>
+    <string name="settings_restore">Restore</string>
+    <string name="settings_restore_summary">Import settings from a backup file</string>
+    <string name="settings_clear">Reset all</string>
+    <string name="settings_clear_summary">Remove all saved preferences</string>
+    <string name="settings_clear_confirm">Remove all saved preferences? This cannot be undone.</string>
+    <string name="settings_restore_not_found">Backup file not found — run a backup first</string>
+    <string name="settings_folder">Backup Folder</string>
+    <string name="settings_folder_default">App storage (default)</string>
+    <string name="settings_folder_summary_fmt">Folder: %s</string>
+    <string name="settings_backup_ok">Backup saved</string>
+    <string name="settings_restore_ok">Preferences restored — restart SystemUI to apply</string>
+    <string name="settings_clear_ok">Preferences deleted</string>
+    <string name="settings_error">Operation failed</string>
+
+    <!-- System Colors (Settings → Colors → Foreground Color) -->
+    <string name="nav_system_colors">Color Accent System</string>
+    <string name="nav_system_colors_summary">Set OOS foreground color (Settings → Colors)</string>
+    <string name="system_color_tap_hint">Tap to pick a color</string>
+    <string name="system_color_apply">Apply Color</string>
+    <string name="system_color_applied">Color applied — open Settings → Colors to confirm</string>
+    <string name="system_color_error">Error applying color</string>
+    <string name="system_color_info_title">How it works</string>
+    <string name="system_color_info_body">Sets the OOS "Foreground colors → Custom" palette. The same color as the system accent in Settings → Colors → Custom.</string>
+
+    <!-- DST Preset dialogs -->
+    <string name="dst_section_colore_preset">Color Preset</string>
+    <string name="dst_none">None</string>
+    <string name="dst_disable">Disable</string>
+    <string name="dst_preset_custom">Custom</string>
+    <string name="dst_section_preset_dialog">Preset Dialog Style</string>
+    <string name="dst_dlg_ht">Dialog Higher Transparent</string>
+    <string name="dst_dlg_hto">Dialog Higher Transparent Outlined</string>
+    <string name="dst_dlg_lt">Dialog Lower Transparent</string>
+    <string name="dst_dlg_lyo">Dialog Lower Transparent Outlined</string>
+    <string name="dst_dlg_mt">Dialog Medium Transparent</string>
+    <string name="dst_dlg_mto">Dialog Medium Transparent Outlined</string>
+    <string name="dst_dlg_s">Dialog Solid</string>
+    <string name="dst_dlg_so">Dialog Solid Outlined</string>
+</resources>
