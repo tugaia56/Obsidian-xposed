@@ -15,8 +15,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +24,7 @@ import it.tugaia56.obsidian.ui.adapters.NavAdapter;
 import it.tugaia56.obsidian.utils.AppUtils;
 import it.tugaia56.obsidian.utils.DstFabricatedUtil;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
+import it.tugaia56.obsidian.xposed.hooks.framework.DstDialogStyle;
 
 /**
  * Status Bar sub-screen: navigation menu + DST Dialog Style preset (5th NavItem).
@@ -120,7 +119,10 @@ public class StatusbarFragment extends Fragment {
         }
 
         final int[] selected = {currentIdx};
-        AlertDialog dlg = new MaterialAlertDialogBuilder(requireContext())
+        // Theme_DeviceDefault_Dialog_Alert bypassa completamente Material theming:
+        // garantisce che setBackgroundDrawableResource() sia visibile come sfondo finestra.
+        AlertDialog dlg = new AlertDialog.Builder(requireContext(),
+                android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle(R.string.dst_section_preset_dialog)
                 .setSingleChoiceItems(names, currentIdx, (d, which) -> selected[0] = which)
                 .setPositiveButton(R.string.apply, (d, w) -> {
@@ -133,7 +135,7 @@ public class StatusbarFragment extends Fragment {
                     }).start();
                 })
                 .setNeutralButton(R.string.dst_disable, (d, w) -> {
-                    ObsidianPrefs.putString(PREF_DLG_PRESET, null);
+                    ObsidianPrefs.remove(PREF_DLG_PRESET);
                     refreshDlgRow();
                     new Thread(() -> {
                         DstFabricatedUtil.saveBootProps();
@@ -192,9 +194,25 @@ public class StatusbarFragment extends Fragment {
     }
 
     private void applyDialogBg(AlertDialog d) {
-        if (d.getWindow() != null) {
-            d.getWindow().setBackgroundDrawableResource(R.drawable.obs_dialog_bg);
+        android.view.Window w = d.getWindow();
+        if (w == null) return;
+
+        // Build the dialog background from the current DST preset so the user
+        // can immediately preview how dialogs will look after applying the preset.
+        String preset = ObsidianPrefs.getString("DST_DLG_PRESET_NAME", null);
+        android.graphics.drawable.Drawable bg;
+        if (preset != null) {
+            int accent = ObsidianPrefs.getInt("DST_ACCENT1", 0xFFFFFFFF);
+            int bgColor = ObsidianPrefs.getInt("DST_BACKGROUND", 0xFF1B2029);
+            float density = getResources().getDisplayMetrics().density;
+            bg = DstDialogStyle.buildDrawable(preset, accent, bgColor, density);
+        } else {
+            bg = requireContext().getDrawable(R.drawable.obs_dialog_bg);
         }
+
+        w.setBackgroundDrawable(bg);
+        w.setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     private void navigate(Fragment fragment, String title) {

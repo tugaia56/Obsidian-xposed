@@ -46,6 +46,8 @@ import java.util.Map;
 import it.tugaia56.obsidian.R;
 import it.tugaia56.obsidian.ui.adapters.ListWidgetAdapter;
 import it.tugaia56.obsidian.ui.adapters.SectionTitleAdapter;
+import it.tugaia56.obsidian.utils.AppUtils;
+import it.tugaia56.obsidian.utils.DstFabricatedUtil;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
 
 /**
@@ -247,6 +249,9 @@ public class SettingsFragment extends Fragment {
                 }
             }
             toast(getString(R.string.settings_restore_ok));
+            // Re-applica i FabricatedOverlay DST abilitati e riavvia SystemUI,
+            // così i colori si attivano subito senza dover riselezionare ogni preset.
+            DstFabricatedUtil.reapplyAll(() -> AppUtils.restartSystemUI());
         } catch (Exception ex) {
             toast(getString(R.string.settings_error) + "\n" + ex.getMessage());
         }

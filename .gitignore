@@ -9,3 +9,14 @@ app/build/
 
 # Local config
 local.properties
+
+# IDE and build caches
+.gradle/
+.idea/workspace.xml
+.idea/caches/
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetSelector.xml
+.idea/compiler.xml
+.idea/migrations.xml
+.idea/AndroidProjectSystem.xml
+.idea/runConfigurations.xml

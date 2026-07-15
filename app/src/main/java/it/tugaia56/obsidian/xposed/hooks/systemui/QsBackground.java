@@ -140,4 +140,5 @@ public class QsBackground extends XposedMods {
             catch (Throwable t2) { return false; }
         }
     }
+
 }

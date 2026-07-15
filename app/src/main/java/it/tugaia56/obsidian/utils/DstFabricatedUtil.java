@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Context;
+import it.tugaia56.obsidian.Obsidian;
 import it.tugaia56.obsidian.ui.models.DarkShadowItem;
 
 /**
@@ -45,6 +47,28 @@ public class DstFabricatedUtil {
         new Thread(() -> {
             Shell.cmd(String.join("; ", commands)).exec();
             saveBootProps(); // write persist.obsidian.dst.* for MonetFreeze boot fallback
+            if (onDone != null) onDone.run();
+        }).start();
+    }
+
+    /**
+     * Re-applica tutti i FabricatedOverlay DST abilitati su un thread di sfondo,
+     * poi chiama onDone (tipicamente AppUtils::restartSystemUI).
+     * Usato dopo il ripristino del backup.
+     */
+    public static void reapplyAll(Runnable onDone) {
+        new Thread(() -> {
+            try {
+                Context ctx = Obsidian.get();
+                if (ctx != null) {
+                    List<String> allCmds = new ArrayList<>();
+                    for (DarkShadowItem item : DarkShadowUtils.getItems(ctx)) {
+                        if (item.isEnabled()) allCmds.addAll(buildApplyCommands(item));
+                    }
+                    if (!allCmds.isEmpty()) Shell.cmd(String.join("; ", allCmds)).exec();
+                    saveBootProps();
+                }
+            } catch (Throwable ignored) {}
             if (onDone != null) onDone.run();
         }).start();
     }
