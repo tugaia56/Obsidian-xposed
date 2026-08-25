@@ -7,6 +7,7 @@ import android.content.Intent;
 import com.topjohnwu.superuser.Shell;
 
 import it.tugaia56.obsidian.utils.Constants;
+import it.tugaia56.obsidian.utils.DstFabricatedUtil;
 import it.tugaia56.obsidian.utils.ModuleConstants;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
 import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
@@ -31,11 +32,18 @@ public class BootReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (!Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) return;
 
+        // PIN overlays (target: com.android.systemui) — 5s is enough
         new Thread(() -> {
-            // Wait for OOS theme service to finish its own overlay setup
             try { Thread.sleep(5000); } catch (InterruptedException ignored) {}
             reapplyPinBg();
             reapplyPinNum();
+        }).start();
+
+        // DST ACCENT/BACKGROUND overlays (target: android) — OOS ThemeManager resets
+        // them after boot, so we wait 15s to re-apply after ThemeManager finishes.
+        new Thread(() -> {
+            try { Thread.sleep(15000); } catch (InterruptedException ignored) {}
+            DstFabricatedUtil.reapplyAll(null);
         }).start();
     }
 

@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
 }
 
 // Load keystore credentials from project-root keystore.properties (gitignored)
@@ -18,10 +19,14 @@ android {
         targetSdk      = 34
         versionCode    = 1
         versionName    = "1.0.0-test"
+        buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
     buildFeatures { viewBinding = true; buildConfig = true }
 
@@ -43,7 +48,52 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
+    // Estrae i .so su disco invece di mmap-parli dall'APK — serve al compilatore overlay
+    // (icon pack Impostazioni) per poter symlinkare libaapt2.so/libzipalign.so come binari
+    // eseguibili in un percorso reale (BinaryInstaller.symLinkBinaries). Le esclusioni
+    // evitano i classici conflitti "more than one file found" con BouncyCastle (usata dal
+    // firmatore APK custom).
+    packaging {
+        jniLibs.excludes += setOf(
+            "/META-INF/*",
+            "/META-INF/versions/**",
+            "/org/bouncycastle/**"
+        )
+        resources.excludes += setOf(
+            "/META-INF/*",
+            "/META-INF/versions/**",
+            "/org/bouncycastle/**"
+        )
+        jniLibs.useLegacyPackaging = true
+    }
+
+    // Rename output APK from app-debug.apk / app-release.apk to Obsidian-debug.apk / Obsidian-release.apk
+    applicationVariants.all {
+        val variant = this
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            output.outputFileName = "Obsidian-${variant.name}.apk"
+        }
+    }
 }
+// ── reinstall: disinstalla + installa clean (evita il deploy incrementale di Studio) ──
+tasks.register("reinstall") {
+    group       = "install"
+    description = "Disinstalla l'app e reinstalla l'APK debug via ADB"
+    dependsOn("assembleDebug")
+    doLast {
+        val apk = "${projectDir}/build/outputs/apk/debug/Obsidian-debug.apk"
+        fun adb(vararg args: String) {
+            ProcessBuilder(listOf("adb") + args.toList())
+                .inheritIO().start().waitFor()
+        }
+        adb("uninstall", "it.tugaia56.obsidian") // ignora errore se non installata
+        adb("install", "-r", apk)
+        println("Obsidian reinstallata. Premi 'Riavvia SystemUI' nell'app.")
+    }
+}
+
 dependencies {
     // Xposed API — local jar only, not from Maven
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -57,4 +107,7 @@ dependencies {
     implementation(libs.libsu.service)
     implementation(libs.remotepreferences)
     implementation(libs.android.documentfile)
+    implementation(libs.android.biometric)
+    implementation(libs.lottie)
+    implementation(libs.bcpkix)
 }

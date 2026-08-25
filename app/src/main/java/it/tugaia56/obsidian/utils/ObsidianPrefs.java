@@ -14,10 +14,14 @@ public class ObsidianPrefs {
     public static void putInt(String key, int value)         { prefs.edit().putInt(key, value).commit(); }
     public static void putFloat(String key, float value)     { prefs.edit().putFloat(key, value).commit(); }
     public static void putString(String key, String value)   { prefs.edit().putString(key, value).commit(); }
-    public static boolean getBoolean(String key, boolean d)  { return prefs.getBoolean(key, d); }
-    public static int     getInt(String key, int d)          { return prefs.getInt(key, d); }
-    public static float   getFloat(String key, float d)      { return prefs.getFloat(key, d); }
-    public static String  getString(String key, String d)    { return prefs.getString(key, d); }
+    // ClassCastException guards: a key can end up holding a different type than expected
+    // when a pref's storage type changes across app versions (e.g. a style picker that
+    // used to store an int now stores a string) — fall back to the default instead of
+    // crashing on the stale value.
+    public static boolean getBoolean(String key, boolean d)  { try { return prefs.getBoolean(key, d); } catch (ClassCastException e) { return d; } }
+    public static int     getInt(String key, int d)          { try { return prefs.getInt(key, d); } catch (ClassCastException e) { return d; } }
+    public static float   getFloat(String key, float d)      { try { return prefs.getFloat(key, d); } catch (ClassCastException e) { return d; } }
+    public static String  getString(String key, String d)    { try { return prefs.getString(key, d); } catch (ClassCastException e) { return d; } }
     public static void    remove(String key)                  { prefs.edit().remove(key).commit(); }
     public static void    clear()                             { prefs.edit().clear().commit(); }
 }

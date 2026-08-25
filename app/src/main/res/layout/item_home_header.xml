@@ -38,15 +38,8 @@
         android:fontFamily="sans-serif"
         android:letterSpacing="0.05"
         android:text="OOS 16 · OnePlus 12"
-        android:textColor="#66FFFFFF"
+        android:textColor="?android:attr/textColorSecondary"
         android:textSize="12sp" />
 
-    <!-- Divider -->
-    <View
-        android:layout_width="40dp"
-        android:layout_height="2dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/obs_primary"
-        android:alpha="0.4" />
 
 </LinearLayout>

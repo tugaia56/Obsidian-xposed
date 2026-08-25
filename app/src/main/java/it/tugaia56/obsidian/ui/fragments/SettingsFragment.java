@@ -46,9 +46,9 @@ import java.util.Map;
 import it.tugaia56.obsidian.R;
 import it.tugaia56.obsidian.ui.adapters.ListWidgetAdapter;
 import it.tugaia56.obsidian.ui.adapters.SectionTitleAdapter;
-import it.tugaia56.obsidian.utils.AppUtils;
 import it.tugaia56.obsidian.utils.DstFabricatedUtil;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
+import it.tugaia56.obsidian.utils.ObsidianTheme;
 
 /**
  * Settings screen — backup / restore / clear all preferences.
@@ -130,40 +130,42 @@ public class SettingsFragment extends Fragment {
                 getString(R.string.settings_folder),
                 getFolderSummary(),
                 () -> mFolderPickerLauncher.launch(null));
+
+        ListWidgetAdapter.ListItem backupItem = new ListWidgetAdapter.ListItem(
+                getString(R.string.settings_backup),
+                getString(R.string.settings_backup_summary),
+                () -> {
+                    Context ctx = mAppCtx;
+                    new Thread(() -> doBackup(ctx)).start();
+                });
+
+        ListWidgetAdapter.ListItem restoreItem = new ListWidgetAdapter.ListItem(
+                getString(R.string.settings_restore),
+                getString(R.string.settings_restore_summary),
+                () -> mFilePickerLauncher.launch(new String[]{"application/json",
+                                                                "application/octet-stream",
+                                                                "*/*"}));
+
+        ListWidgetAdapter.ListItem clearItem = new ListWidgetAdapter.ListItem(
+                getString(R.string.settings_clear),
+                getString(R.string.settings_clear_summary),
+                this::confirmClear);
+
+        // Riga singola per mFolderItem (invece di GroupUtils.addGroup su tutte e 4) per
+        // conservare il riferimento diretto a mFolderAdapter — serve più sotto per
+        // aggiornare il riepilogo cartella con notifyDataSetChanged() dopo la scelta.
+        mFolderItem.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.TOP;
+        backupItem.groupPos  = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.MIDDLE;
+        restoreItem.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.MIDDLE;
+        clearItem.groupPos   = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.BOTTOM;
         mFolderAdapter = new ListWidgetAdapter(List.of(mFolderItem));
-
-        // ── Backup ────────────────────────────────────────────────────────────
-        ListWidgetAdapter backupAdapter = new ListWidgetAdapter(List.of(
-                new ListWidgetAdapter.ListItem(
-                        getString(R.string.settings_backup),
-                        getString(R.string.settings_backup_summary),
-                        () -> {
-                            Context ctx = mAppCtx;
-                            new Thread(() -> doBackup(ctx)).start();
-                        })));
-
-        // ── Restore ───────────────────────────────────────────────────────────
-        ListWidgetAdapter restoreAdapter = new ListWidgetAdapter(List.of(
-                new ListWidgetAdapter.ListItem(
-                        getString(R.string.settings_restore),
-                        getString(R.string.settings_restore_summary),
-                        () -> mFilePickerLauncher.launch(new String[]{"application/json",
-                                                                        "application/octet-stream",
-                                                                        "*/*"}))));
-
-        // ── Clear ─────────────────────────────────────────────────────────────
-        ListWidgetAdapter clearAdapter = new ListWidgetAdapter(List.of(
-                new ListWidgetAdapter.ListItem(
-                        getString(R.string.settings_clear),
-                        getString(R.string.settings_clear_summary),
-                        this::confirmClear)));
 
         rv.setAdapter(new ConcatAdapter(
                 new SectionTitleAdapter(List.of(getString(R.string.settings_section))),
                 mFolderAdapter,
-                backupAdapter,
-                restoreAdapter,
-                clearAdapter));
+                new ListWidgetAdapter(List.of(backupItem)),
+                new ListWidgetAdapter(List.of(restoreItem)),
+                new ListWidgetAdapter(List.of(clearItem))));
     }
 
     // ── Backup ────────────────────────────────────────────────────────────────
@@ -249,9 +251,10 @@ public class SettingsFragment extends Fragment {
                 }
             }
             toast(getString(R.string.settings_restore_ok));
-            // Re-applica i FabricatedOverlay DST abilitati e riavvia SystemUI,
-            // così i colori si attivano subito senza dover riselezionare ogni preset.
-            DstFabricatedUtil.reapplyAll(() -> AppUtils.restartSystemUI());
+            // Re-applica i FabricatedOverlay DST abilitati; il riavvio SystemUI
+            // resta manuale (pulsante in alto), come per ogni altra opzione.
+            DstFabricatedUtil.reapplyAll(() ->
+                    Toast.makeText(requireContext(), R.string.obs_restart_ui_hint, Toast.LENGTH_SHORT).show());
         } catch (Exception ex) {
             toast(getString(R.string.settings_error) + "\n" + ex.getMessage());
         }
@@ -270,6 +273,7 @@ public class SettingsFragment extends Fragment {
                 .setNegativeButton(R.string.cancel, null)
                 .show();
         fixButtonCaps(d);
+        ObsidianTheme.themeDialog(d);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -304,7 +308,11 @@ public class SettingsFragment extends Fragment {
     private static void fixButtonCaps(AlertDialog d) {
         for (int w : new int[]{AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE}) {
             Button b = d.getButton(w);
-            if (b != null) b.setAllCaps(false);
+            if (b == null) continue;
+            b.setAllCaps(false);
+            b.setSingleLine(false);
+            b.setMaxLines(2);
+            b.setEllipsize(null);
         }
     }
 }

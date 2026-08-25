@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Obsidian" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.Obsidian" parent="Theme.MaterialComponents.DayNight">
         <item name="colorPrimary">@color/obs_primary</item>
         <item name="colorPrimaryVariant">@color/obs_primary_variant</item>
         <item name="colorSecondary">@color/obs_secondary</item>
@@ -10,5 +10,19 @@
     <style name="Theme.Obsidian.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+    <style name="Theme.Obsidian.Transparent" parent="Theme.Obsidian.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
+    <!-- Usata da lockscreen_clock_27.xml (OC "Ls Clock 28") -->
+    <style name="ConsolasFontTextAppearance">
+        <item name="fontFamily">@font/consolas</item>
+        <item name="android:fontFamily">@font/consolas</item>
     </style>
 </resources>

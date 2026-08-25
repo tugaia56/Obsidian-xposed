@@ -5,8 +5,8 @@ import android.graphics.Color;
 public class ColorUtils {
 
     /**
-     * Adjust a color:
-     *  -100..+100  → brightness shift by that signed percentage
+     * Adjust a color (same algorithm as OC's ColorUtils.adjustColor):
+     *  -100..+100  → each RGB channel scaled by (1 + amount/100), matching OC behaviour
      *  1000..1255  → alpha override: alpha = (amount - 1000), RGB kept from color
      */
     public static int adjustColor(int color, int amount) {
@@ -14,10 +14,14 @@ public class ColorUtils {
             int alpha = Math.min(255, amount - 1000);
             return (color & 0x00FFFFFF) | (alpha << 24);
         }
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] = Math.max(0f, Math.min(1f, hsv[2] + amount / 100f));
-        return Color.HSVToColor(Color.alpha(color), hsv);
+        float percent = amount;
+        int r = Color.red(color);
+        int g = Color.green(color);
+        int b = Color.blue(color);
+        r = (int) Math.min(255, Math.max(0, r + (r * percent / 100)));
+        g = (int) Math.min(255, Math.max(0, g + (g * percent / 100)));
+        b = (int) Math.min(255, Math.max(0, b + (b * percent / 100)));
+        return Color.argb(Color.alpha(color), r, g, b);
     }
 
     /** Multiply the alpha channel by factor (0..1). */

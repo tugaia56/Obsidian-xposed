@@ -10,6 +10,7 @@ import java.util.Map;
 import android.content.Context;
 import it.tugaia56.obsidian.Obsidian;
 import it.tugaia56.obsidian.ui.models.DarkShadowItem;
+import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
 
 /**
  * Applies every DST color resource as a Fabricated Overlay so Substratum and
@@ -19,14 +20,13 @@ import it.tugaia56.obsidian.ui.models.DarkShadowItem;
  * level. This class replicates OC's FabricatedUtil approach: one fabricated
  * overlay per resource, named ObsidianComponent<OVERLAYNAME>_<index>.
  *
- * IMPORTANT: applyThenRun() must be used instead of calling apply() and
- * restarting immediately after. SystemUI restart must happen ONLY after all
- * shell commands finish, otherwise the resource table still has the old value.
+ * Persistence: delegates to FabricatedUtil.buildAndEnableOverlays() which
+ * calls saveToPostExec() internally — the same proven mechanism used for PIN.
  */
 public class DstFabricatedUtil {
 
     private static final String PREFIX = "ObsidianComponent";
-    private static final String TYPE   = "0x1c"; // TYPE_COLOR
+    private static final String TYPE   = "0x1c"; // TYPE_COLOR (used by applyMultiColorThenRun)
 
     // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -35,18 +35,31 @@ public class DstFabricatedUtil {
      * {@code onDone} (e.g. AppUtils::restartSystemUI) when all commands finish.
      * No-op if item.isEnabled() is false (onDone is NOT called in that case).
      *
-     * Also persists DST colours to system properties so MonetFreeze can read
-     * them at boot before the SharedPreferences file is world-readable.
+     * Uses FabricatedUtil.buildAndEnableOverlays() so overlays are automatically
+     * saved to post-exec.sh — same persistence used for PIN colors.
      */
     public static void applyThenRun(DarkShadowItem item, Runnable onDone) {
         if (!item.isEnabled()) return;
 
-        List<String> commands = buildApplyCommands(item);
-        if (commands.isEmpty()) return;
+        int color = item.getColor();
+        String pkg = item.getPackages().isEmpty() ? "android" : item.getPackages().get(0);
+        String colorHex = toHex(color);
 
+        List<Object[]> argsList = new ArrayList<>();
+        int i = 0;
+        for (String resName : item.getResourceNames()) {
+            argsList.add(new Object[]{pkg, item.getOverlayName() + "_" + i++, "color", resName, colorHex});
+        }
+        for (Map.Entry<String, Integer> entry : item.getAdjustColors().entrySet()) {
+            argsList.add(new Object[]{pkg, item.getOverlayName() + "_" + i++, "color",
+                    entry.getKey(), toHex(ColorUtils.adjustColor(color, entry.getValue()))});
+        }
+        if (argsList.isEmpty()) return;
+
+        final Object[][] args = argsList.toArray(new Object[0][]);
         new Thread(() -> {
-            Shell.cmd(String.join("; ", commands)).exec();
-            saveBootProps(); // write persist.obsidian.dst.* for MonetFreeze boot fallback
+            FabricatedUtil.buildAndEnableOverlays(args); // applies + saves to post-exec.sh
+            saveBootProps();
             if (onDone != null) onDone.run();
         }).start();
     }
@@ -93,22 +106,19 @@ public class DstFabricatedUtil {
     /**
      * Disable all fabricated overlays for the given item on a background thread,
      * then call {@code onDone} when finished.
+     *
+     * Uses FabricatedUtil.disableOverlays() so entries are also removed from post-exec.sh.
      */
     public static void disableThenRun(DarkShadowItem item, Runnable onDone) {
-        List<String> commands = new ArrayList<>();
         int count = item.getResourceNames().size() + item.getAdjustColors().size();
-        for (int i = 0; i < count; i++) {
-            commands.add("cmd overlay disable --user current com.android.shell:"
-                    + PREFIX + item.getOverlayName() + "_" + i);
-        }
-        if (commands.isEmpty()) {
-            if (onDone != null) onDone.run();
-            return;
-        }
-        final String joined = String.join("; ", commands);
+        if (count == 0) { if (onDone != null) onDone.run(); return; }
+
+        String[] names = new String[count];
+        for (int i = 0; i < count; i++) names[i] = item.getOverlayName() + "_" + i;
+
         new Thread(() -> {
-            Shell.cmd(joined).exec();
-            saveBootProps(); // aggiorna props anche quando si disabilita
+            FabricatedUtil.disableOverlays(names); // disables + removes from post-exec.sh
+            saveBootProps();
             if (onDone != null) onDone.run();
         }).start();
     }
@@ -157,9 +167,6 @@ public class DstFabricatedUtil {
      * Writes current DST pref values to persist.obsidian.dst.* system properties
      * so MonetFreeze can read them at boot via SystemProperties.get() when the
      * SharedPreferences XML file is not yet world-readable (EACCES from system server).
-     *
-     * Must be called after every DST colour change (on a background thread).
-     * Root access is required (setprop for persist.* props needs root).
      */
     public static void saveBootProps() {
         try {
@@ -174,27 +181,49 @@ public class DstFabricatedUtil {
             String  pin       = ObsidianPrefs.getString("DST_PIN",              "");
             String  pinNum    = ObsidianPrefs.getString("DST_PIN_NUM",          "");
             String  dlgPreset = ObsidianPrefs.getString("DST_DLG_PRESET_NAME",  "");
+            // CPB / RVD / SVD / QS BG presets — needed by hooks that lack Xprefs at early boot
+            String  cpbPreset   = ObsidianPrefs.getString("DST_PRESET_CPB",     "");
+            String  rvdPreset   = ObsidianPrefs.getString("DST_PRESET_RVD",     "");
+            String  svdPreset   = ObsidianPrefs.getString("DST_PRESET_SVD",     "");
+            String  toastPreset  = ObsidianPrefs.getString("DST_PRESET_TOAST",  "");
+            String  notifPreset  = ObsidianPrefs.getString("DST_PRESET_NOTIF",  "");
+            int     notifCorner  = ObsidianPrefs.getInt(   "DST_NOTIF_CORNER",   24);
+            boolean qsBgOn       = ObsidianPrefs.getBoolean("DST_QS_BG_ENABLED", false);
 
-            // setprop accepts any string value; store ints as decimal (signed ok)
-            Shell.cmd(
-                "setprop persist.obsidian.dst.a1_on      " + (a1On ? "1" : "0"),
-                "setprop persist.obsidian.dst.a1         " + a1,
-                "setprop persist.obsidian.dst.a2_on      " + (a2On ? "1" : "0"),
-                "setprop persist.obsidian.dst.a2         " + a2,
-                "setprop persist.obsidian.dst.a3_on      " + (a3On ? "1" : "0"),
-                "setprop persist.obsidian.dst.a3         " + a3,
-                "setprop persist.obsidian.dst.bg_on      " + (bgOn ? "1" : "0"),
-                "setprop persist.obsidian.dst.bg         " + bg,
-                "setprop persist.obsidian.dst.pin         \"" + (pin       == null ? "" : pin)       + "\"",
-                "setprop persist.obsidian.dst.pin_num     \"" + (pinNum    == null ? "" : pinNum)    + "\"",
-                "setprop persist.obsidian.dst.dlg_preset  \"" + (dlgPreset == null ? "" : dlgPreset) + "\""
+            Shell.Result propsResult = Shell.cmd(
+                "setprop persist.obsidian.dst.a1_on       " + (a1On ? "1" : "0"),
+                "setprop persist.obsidian.dst.a1          " + a1,
+                "setprop persist.obsidian.dst.a2_on       " + (a2On ? "1" : "0"),
+                "setprop persist.obsidian.dst.a2          " + a2,
+                "setprop persist.obsidian.dst.a3_on       " + (a3On ? "1" : "0"),
+                "setprop persist.obsidian.dst.a3          " + a3,
+                "setprop persist.obsidian.dst.bg_on       " + (bgOn ? "1" : "0"),
+                "setprop persist.obsidian.dst.bg          " + bg,
+                "setprop persist.obsidian.dst.pin          \"" + (pin       == null ? "" : pin)       + "\"",
+                "setprop persist.obsidian.dst.pin_num      \"" + (pinNum    == null ? "" : pinNum)    + "\"",
+                "setprop persist.obsidian.dst.dlg_preset   \"" + (dlgPreset == null ? "" : dlgPreset) + "\"",
+                "setprop persist.obsidian.dst.cpb_preset   \"" + (cpbPreset == null ? "" : cpbPreset) + "\"",
+                "setprop persist.obsidian.dst.rvd_preset   \"" + (rvdPreset == null ? "" : rvdPreset) + "\"",
+                "setprop persist.obsidian.dst.svd_preset   \"" + (svdPreset   == null ? "" : svdPreset)   + "\"",
+                "setprop persist.obsidian.dst.toast_preset  \"" + (toastPreset == null ? "" : toastPreset) + "\"",
+                "setprop persist.obsidian.dst.notif_preset  \"" + (notifPreset == null ? "" : notifPreset) + "\"",
+                "setprop persist.obsidian.dst.notif_corner  " + notifCorner,
+                "setprop persist.obsidian.dst.qs_bg_on      " + (qsBgOn ? "1" : "0")
             ).exec();
+            if (!propsResult.isSuccess()) {
+                android.util.Log.e("Obsidian", "DstFabricatedUtil.saveBootProps: setprop FAILED code="
+                        + propsResult.getCode() + " out=" + propsResult.getOut()
+                        + " err=" + propsResult.getErr());
+            }
 
-            // Also chmod the prefs file world-readable so future boots can read it
-            // directly (faster than props fallback). Best-effort — may fail if file
-            // was just atomically-rewritten by SharedPreferences with fresh 0600 perms.
-            Shell.cmd("chmod 644 /data/user_de/0/it.tugaia56.obsidian/shared_prefs/"
+            Shell.Result chmodResult = Shell.cmd("chmod 644 /data/user_de/0/it.tugaia56.obsidian/shared_prefs/"
                     + "it.tugaia56.obsidian_preferences.xml").exec();
-        } catch (Throwable ignored) {}
+            if (!chmodResult.isSuccess()) {
+                android.util.Log.e("Obsidian", "DstFabricatedUtil.saveBootProps: chmod FAILED code="
+                        + chmodResult.getCode() + " err=" + chmodResult.getErr());
+            }
+        } catch (Throwable t) {
+            android.util.Log.e("Obsidian", "DstFabricatedUtil.saveBootProps: EXCEPTION", t);
+        }
     }
 }

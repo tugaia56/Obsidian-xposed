@@ -51,7 +51,11 @@ public class DarkShadowUtils {
         "legacy_primary_dark",
         "black",
         "primary_dark_material_dark",
-        "primary_material_dark"
+        "primary_material_dark",
+        // Sfondo di fallback di molti AlertDialog stock (es. "Usa USB per") — il tema
+        // Substratum dell'utente lo mappa a background_dark in tutti i pacchetti, ma DST
+        // non lo fabbricava ancora: restava al valore Material hardcoded #ff303030.
+        "material_grey_850"
     );
 
     /**

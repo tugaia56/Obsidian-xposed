@@ -8,24 +8,22 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 import it.tugaia56.obsidian.R;
-import it.tugaia56.obsidian.ui.adapters.SectionTitleAdapter;
-import it.tugaia56.obsidian.ui.adapters.SwitchWidgetAdapter;
-import it.tugaia56.obsidian.utils.AppUtils;
+import it.tugaia56.obsidian.ui.activity.MainActivity;
+import it.tugaia56.obsidian.ui.adapters.NavAdapter;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
 
 /**
- * Quick Settings sub-screen: solid QS background toggle.
+ * Intestazione Impostazioni Rapide — Sfondo Solido, Header Image, QS Header Clock.
+ * "Sfondo Solido" è tornato qui (era stato spostato per errore in Pannello Impostazioni
+ * Rapide) con lo stesso bordo/aspetto originale (QsSolidBgFragment invariato).
  */
 public class QsFragment extends Fragment {
-
-    private static final String PREF_QS_BG = "DST_QS_BG_ENABLED";
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -34,7 +32,7 @@ public class QsFragment extends Fragment {
         rv.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rv.setPadding(0, 8, 0, 8);
+        rv.setPadding(0, 12, 0, 24);
         rv.setClipToPadding(false);
         return rv;
     }
@@ -44,20 +42,39 @@ public class QsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         RecyclerView rv = (RecyclerView) view;
 
-        SwitchWidgetAdapter.SwitchItem qsItem = new SwitchWidgetAdapter.SwitchItem(
-                getString(R.string.dst_qs_solid_bg),
-                getString(R.string.dst_qs_solid_bg_summary),
-                R.drawable.ic_qs,
-                ObsidianPrefs.getBoolean(PREF_QS_BG, false),
-                null);
-        qsItem.onChanged = () -> {
-            ObsidianPrefs.putBoolean(PREF_QS_BG, qsItem.checked);
-            AppUtils.restartSystemUI();
-        };
+        boolean bgEnabled     = ObsidianPrefs.getBoolean("DST_QS_BG_ENABLED",    false);
+        boolean headerEnabled = ObsidianPrefs.getBoolean("OBS_QS_HEADER_ENABLED", false);
 
-        rv.setAdapter(new ConcatAdapter(
-                new SectionTitleAdapter(List.of(getString(R.string.nav_quick_settings))),
-                new SwitchWidgetAdapter(List.of(qsItem))
+        NavAdapter adapter = new NavAdapter(List.of(
+                new NavAdapter.NavItem(
+                        R.drawable.ic_qs,
+                        getString(R.string.dst_qs_solid_bg),
+                        bgEnabled ? getString(R.string.enabled) : getString(R.string.disabled),
+                        () -> navigate(new QsSolidBgFragment(),
+                                getString(R.string.dst_qs_solid_bg))),
+
+                new NavAdapter.NavItem(
+                        R.drawable.ic_qs,
+                        getString(R.string.qs_header_section),
+                        headerEnabled ? getString(R.string.enabled) : getString(R.string.disabled),
+                        () -> navigate(new QsHeaderImageFragment(),
+                                getString(R.string.qs_header_section))),
+
+                new NavAdapter.NavItem(
+                        R.drawable.ic_qs,
+                        getString(R.string.qs_header_clock_section),
+                        ObsidianPrefs.getBoolean("OBS_QS_CLOCK_ENABLED", false)
+                                ? getString(R.string.enabled) : getString(R.string.disabled),
+                        () -> navigate(new QsHeaderClockFragment(),
+                                getString(R.string.qs_header_clock_section)))
         ));
+
+        rv.setAdapter(adapter);
+    }
+
+    private void navigate(Fragment fragment, String title) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).navigateTo(fragment, title);
+        }
     }
 }

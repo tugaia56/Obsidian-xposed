@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="seed">#00897B</color>
+    <color name="white">#FFFFFF</color>
     <color name="obs_primary">#908dff</color>
     <color name="obs_primary_variant">#7574e2</color>
     <color name="obs_secondary">#908dff</color>

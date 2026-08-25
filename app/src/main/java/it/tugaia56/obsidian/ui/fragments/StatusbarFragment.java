@@ -1,17 +1,13 @@
 package it.tugaia56.obsidian.ui.fragments;
 
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,21 +17,19 @@ import java.util.List;
 import it.tugaia56.obsidian.R;
 import it.tugaia56.obsidian.ui.activity.MainActivity;
 import it.tugaia56.obsidian.ui.adapters.NavAdapter;
-import it.tugaia56.obsidian.utils.AppUtils;
-import it.tugaia56.obsidian.utils.DstFabricatedUtil;
+import it.tugaia56.obsidian.ui.adapters.SectionTitleAdapter;
+import it.tugaia56.obsidian.ui.adapters.SwitchWidgetAdapter;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
-import it.tugaia56.obsidian.xposed.hooks.framework.DstDialogStyle;
 
 /**
- * Status Bar sub-screen: navigation menu + DST Dialog Style preset (5th NavItem).
+ * Status Bar sub-screen:
+ *  – NavItems: Orologio, Notifiche
+ *  – Switch inline: BT, DT-sleep, Luminosità
+ *
+ * Icone Batteria e Stile Icone Segnale sono stati spostati al livello Home DST
+ * (vedi DstTabFragment → "Stile icone Segnale" / SignalStyleFragment).
  */
 public class StatusbarFragment extends Fragment {
-
-    private static final String   PREF_DLG_PRESET = "DST_DLG_PRESET_NAME";
-    private static final String[] DLG_STYLE_KEYS  = {
-        "DSTDHT", "DSTDHTO", "DSTDLT", "DSTDLYO",
-        "DSTDMT", "DSTDMTO", "DSTDS",  "DSTDSO"
-    };
 
     private final List<NavAdapter.NavItem> mNavItems = new ArrayList<>();
     private NavAdapter mNavAdapter;
@@ -59,27 +53,7 @@ public class StatusbarFragment extends Fragment {
 
         mNavItems.clear();
 
-        mNavItems.add(new NavAdapter.NavItem(
-                R.drawable.ic_palette,
-                getString(R.string.section_statusbar_icon_color),
-                getString(R.string.section_statusbar_icon_color_summary),
-                () -> navigate(new StatusbarSbiFragment(),
-                        getString(R.string.section_statusbar_icon_color))));
-
-        mNavItems.add(new NavAdapter.NavItem(
-                R.drawable.ic_mods_ui,
-                getString(R.string.section_statusbar_icons),
-                getString(R.string.section_statusbar_icons_summary),
-                () -> navigate(new StatusbarIconsFragment(),
-                        getString(R.string.section_statusbar_icons))));
-
-        mNavItems.add(new NavAdapter.NavItem(
-                R.drawable.ic_notifications,
-                getString(R.string.section_statusbar_notifs),
-                getString(R.string.section_statusbar_notifs_summary),
-                () -> navigate(new StatusbarNotifsFragment(),
-                        getString(R.string.section_statusbar_notifs))));
-
+        // 1. Orologio & Calendario
         mNavItems.add(new NavAdapter.NavItem(
                 R.drawable.ic_clock,
                 getString(R.string.section_clock_date),
@@ -87,132 +61,58 @@ public class StatusbarFragment extends Fragment {
                 () -> navigate(new ClockDateFragment(),
                         getString(R.string.section_clock_date))));
 
-        // 5th item: dialog style preset (opens picker dialog, does not navigate)
+        // 2. Notifiche
         mNavItems.add(new NavAdapter.NavItem(
-                R.drawable.ic_ui_styles,
-                getString(R.string.dst_section_preset_dialog),
-                getDlgPresetLabel(),
-                this::showDialogStylePresetDialog));
+                R.drawable.ic_notifications,
+                getString(R.string.section_statusbar_notifs),
+                getString(R.string.section_statusbar_notifs_summary),
+                () -> navigate(new StatusbarNotifsFragment(),
+                        getString(R.string.section_statusbar_notifs))));
 
         mNavAdapter = new NavAdapter(mNavItems);
-        rv.setAdapter(mNavAdapter);
+
+        // ── Icon switches inline ──────────────────────────────────────────────
+        SectionTitleAdapter iconSection = new SectionTitleAdapter(
+                List.of(getString(R.string.section_statusbar_icons)));
+        SwitchWidgetAdapter iconSwitches = new SwitchWidgetAdapter(buildIconSwitches());
+
+        rv.setAdapter(new ConcatAdapter(mNavAdapter, iconSection, iconSwitches));
     }
 
-    // ---- Dialog Style -------------------------------------------------------
+    // ── Icon switch items ─────────────────────────────────────────────────────
 
-    private void showDialogStylePresetDialog() {
-        String[] names = {
-            getString(R.string.dst_dlg_ht),
-            getString(R.string.dst_dlg_hto),
-            getString(R.string.dst_dlg_lt),
-            getString(R.string.dst_dlg_lyo),
-            getString(R.string.dst_dlg_mt),
-            getString(R.string.dst_dlg_mto),
-            getString(R.string.dst_dlg_s),
-            getString(R.string.dst_dlg_so),
-        };
-
-        String saved = ObsidianPrefs.getString(PREF_DLG_PRESET, null);
-        int currentIdx = -1;
-        for (int i = 0; i < DLG_STYLE_KEYS.length; i++) {
-            if (DLG_STYLE_KEYS[i].equals(saved)) { currentIdx = i; break; }
-        }
-
-        final int[] selected = {currentIdx};
-        // Theme_DeviceDefault_Dialog_Alert bypassa completamente Material theming:
-        // garantisce che setBackgroundDrawableResource() sia visibile come sfondo finestra.
-        AlertDialog dlg = new AlertDialog.Builder(requireContext(),
-                android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                .setTitle(R.string.dst_section_preset_dialog)
-                .setSingleChoiceItems(names, currentIdx, (d, which) -> selected[0] = which)
-                .setPositiveButton(R.string.apply, (d, w) -> {
-                    if (selected[0] < 0) return;
-                    ObsidianPrefs.putString(PREF_DLG_PRESET, DLG_STYLE_KEYS[selected[0]]);
-                    refreshDlgRow();
-                    new Thread(() -> {
-                        DstFabricatedUtil.saveBootProps();
-                        AppUtils.restartSystemUI();
-                    }).start();
-                })
-                .setNeutralButton(R.string.dst_disable, (d, w) -> {
-                    ObsidianPrefs.remove(PREF_DLG_PRESET);
-                    refreshDlgRow();
-                    new Thread(() -> {
-                        DstFabricatedUtil.saveBootProps();
-                        AppUtils.restartSystemUI();
-                    }).start();
-                })
-                .setNegativeButton(R.string.close, null)
-                .show();
-        fixButtonCaps(dlg);
-        applyDialogBg(dlg);
+    private List<SwitchWidgetAdapter.SwitchItem> buildIconSwitches() {
+        SwitchWidgetAdapter.SwitchItem s1 = makePrefSwitch(
+                getString(R.string.hide_bluetooth_disconnected),
+                getString(R.string.hide_bluetooth_disconnected_summary),
+                "hide_bluetooth_when_disconnected");
+        SwitchWidgetAdapter.SwitchItem s2 = makePrefSwitch(
+                getString(R.string.double_tap_sleep_statusbar),
+                getString(R.string.double_tap_sleep_statusbar_summary),
+                "double_tap_sleep_statusbar");
+        SwitchWidgetAdapter.SwitchItem s3 = makePrefSwitch(
+                getString(R.string.statusbar_brightness),
+                getString(R.string.statusbar_brightness_summary),
+                "statusbar_brightness");
+        SwitchWidgetAdapter.SwitchItem s4 = makePrefSwitch(
+                getString(R.string.block_clipboard_overlay),
+                getString(R.string.block_clipboard_overlay_summary),
+                "block_clipboard_overlay");
+        s1.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.TOP;
+        s2.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.MIDDLE;
+        s3.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.MIDDLE;
+        s4.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.BOTTOM;
+        return List.of(s1, s2, s3, s4);
     }
 
-    private String getDlgPresetLabel() {
-        String saved = ObsidianPrefs.getString(PREF_DLG_PRESET, null);
-        if (saved == null) return getString(R.string.dst_none);
-        int[] nameRes = {
-            R.string.dst_dlg_ht,  R.string.dst_dlg_hto,
-            R.string.dst_dlg_lt,  R.string.dst_dlg_lyo,
-            R.string.dst_dlg_mt,  R.string.dst_dlg_mto,
-            R.string.dst_dlg_s,   R.string.dst_dlg_so,
-        };
-        for (int i = 0; i < DLG_STYLE_KEYS.length; i++) {
-            if (DLG_STYLE_KEYS[i].equals(saved)) return getString(nameRes[i]);
-        }
-        return saved;
-    }
-
-    /** Replace the 5th NavItem subtitle to reflect the newly chosen preset. */
-    private void refreshDlgRow() {
-        if (mNavAdapter == null || mNavItems.size() < 5 || !isAdded()) return;
-        mNavItems.set(4, new NavAdapter.NavItem(
-                R.drawable.ic_ui_styles,
-                getString(R.string.dst_section_preset_dialog),
-                getDlgPresetLabel(),
-                this::showDialogStylePresetDialog));
-        mNavAdapter.notifyItemChanged(4);
-    }
-
-    // ---- Helpers ------------------------------------------------------------
-
-    private static void fixButtonCaps(AlertDialog d) {
-        Button pos = d.getButton(AlertDialog.BUTTON_POSITIVE);
-        Button neg = d.getButton(AlertDialog.BUTTON_NEGATIVE);
-        Button neu = d.getButton(AlertDialog.BUTTON_NEUTRAL);
-        for (Button b : new Button[]{pos, neg, neu}) {
-            if (b == null) continue;
-            b.setAllCaps(false);
-        }
-        if (neu != null && neu.getParent() instanceof LinearLayout) {
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-            lp.gravity = Gravity.CENTER;
-            neu.setLayoutParams(lp);
-            neu.setGravity(Gravity.CENTER);
-        }
-    }
-
-    private void applyDialogBg(AlertDialog d) {
-        android.view.Window w = d.getWindow();
-        if (w == null) return;
-
-        // Build the dialog background from the current DST preset so the user
-        // can immediately preview how dialogs will look after applying the preset.
-        String preset = ObsidianPrefs.getString("DST_DLG_PRESET_NAME", null);
-        android.graphics.drawable.Drawable bg;
-        if (preset != null) {
-            int accent = ObsidianPrefs.getInt("DST_ACCENT1", 0xFFFFFFFF);
-            int bgColor = ObsidianPrefs.getInt("DST_BACKGROUND", 0xFF1B2029);
-            float density = getResources().getDisplayMetrics().density;
-            bg = DstDialogStyle.buildDrawable(preset, accent, bgColor, density);
-        } else {
-            bg = requireContext().getDrawable(R.drawable.obs_dialog_bg);
-        }
-
-        w.setBackgroundDrawable(bg);
-        w.setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+    private SwitchWidgetAdapter.SwitchItem makePrefSwitch(String title, String summary,
+                                                           String prefKey) {
+        SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
+                title, summary,
+                ObsidianPrefs.getBoolean(prefKey, false),
+                null);
+        item.onChanged = () -> ObsidianPrefs.putBoolean(prefKey, item.checked);
+        return item;
     }
 
     private void navigate(Fragment fragment, String title) {

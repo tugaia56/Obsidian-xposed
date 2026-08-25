@@ -2,6 +2,7 @@ package it.tugaia56.obsidian.xposed;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import de.robv.android.xposed.XposedBridge;
 import it.tugaia56.obsidian.BuildConfig;
 import it.tugaia56.obsidian.xposed.utils.ExtendedRemotePreferences;
 public class XPrefs {
@@ -12,6 +13,14 @@ public class XPrefs {
         Xprefs.registerOnSharedPreferenceChangeListener(listener);
     }
     public static void loadEverything(String... key) {
-        for (XposedMods mod : XPLauncher.runningMods) mod.updatePrefs(key);
+        // Un mod che lancia un'eccezione (es. un pref con tipo cambiato tra versioni) non deve
+        // impedire agli altri mod di aggiornarsi, né tantomeno destabilizzare SystemUI.
+        for (XposedMods mod : XPLauncher.runningMods) {
+            try {
+                mod.updatePrefs(key);
+            } catch (Throwable t) {
+                XposedBridge.log("[ Obsidian ] " + mod.getClass().getSimpleName() + ".updatePrefs failed: " + t);
+            }
+        }
     }
 }

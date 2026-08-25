@@ -9,13 +9,13 @@
 
     <!-- Preview card -->
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/systemColorPreviewCard"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/obs_surface"
         app:cardCornerRadius="18dp"
         app:cardElevation="0dp"
-        app:strokeColor="#33FFFFFF"
         app:strokeWidth="1dp">
 
         <LinearLayout
@@ -46,15 +46,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:fontFamily="monospace"
-                android:textColor="#CCFFFFFF"
                 android:textSize="16sp" />
 
             <TextView
+                android:id="@+id/systemColorTapHint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/system_color_tap_hint"
-                android:textColor="#55FFFFFF"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -63,13 +62,13 @@
 
     <!-- Info card -->
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/systemColorInfoCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/obs_surface"
         app:cardCornerRadius="14dp"
         app:cardElevation="0dp"
-        app:strokeColor="#33FFFFFF"
         app:strokeWidth="1dp">
 
         <LinearLayout
@@ -79,19 +78,19 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/systemColorInfoTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/system_color_info_title"
-                android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/systemColorInfoBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="@string/system_color_info_body"
-                android:textColor="#99FFFFFF"
                 android:textSize="12sp" />
 
         </LinearLayout>

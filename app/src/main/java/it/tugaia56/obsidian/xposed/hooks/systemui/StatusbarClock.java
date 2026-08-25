@@ -15,7 +15,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ResolveInfo;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Spannable;
@@ -89,11 +93,25 @@ public class StatusbarClock extends XposedMods {
     private boolean mCustomColor = false;
     private int     mColor       = Color.WHITE;
 
+    // Background chip (reale OC status_bar_clock_background_chip)
+    private boolean mChipOn           = false;
+    private int     mChipStyle        = 0; // 0=pieno 1=contorno 2=misto
+    private boolean mChipFillAccent   = true;
+    private int     mChipFillColor    = Color.WHITE;
+    private boolean mChipStrokeAccent = true;
+    private int     mChipStrokeColor  = Color.WHITE;
+    private int     mChipStrokeWidth  = 2;  // dp
+    private boolean mChipRoundCorners = false;
+    private int     mChipCorner       = 14; // dp
+    private int     mChipMarginTop    = 0, mChipMarginLeft = 0, mChipMarginRight = 0, mChipMarginBottom = 0;
+    private int     mChipPadTop       = 0, mChipPadLeft    = 0, mChipPadRight    = 0, mChipPadBottom    = 0;
+
     private boolean mShowSeconds = false;
     private int     mAmPmStyle   = AM_PM_GONE;
 
     private int     mDateDisplay = DATE_GONE;
     private int     mDatePos     = DATE_BEFORE;
+    private String  mDateFormat  = "EEE, d MMM";
 
     private String  mBeforeClock = "";
     private boolean mBeforeSmall = false;
@@ -177,16 +195,35 @@ public class StatusbarClock extends XposedMods {
         if (Xprefs == null) return;
 
         mPosition    = Integer.parseInt(Xprefs.getString("status_bar_clock", String.valueOf(POS_LEFT)));
-        mSize        = Xprefs.getSliderInt("status_bar_clock_size",    12);
-        mPadding     = Xprefs.getSliderInt("status_bar_clock_padding", 0);
+        mSize        = Xprefs.getInt("status_bar_clock_size",    12);
+        mPadding     = Xprefs.getInt("status_bar_clock_padding", 0);
         mCustomColor = Xprefs.getBoolean("status_bar_custom_clock_color", false);
         mColor       = Xprefs.getInt("status_bar_clock_color", Color.WHITE);
+
+        mChipOn           = Xprefs.getBoolean("status_bar_clock_background_chip_switch", false);
+        mChipStyle        = parseIntSafe(Xprefs.getString("status_bar_clock_background_chip_style", "0"), 0);
+        mChipFillAccent   = Xprefs.getBoolean("status_bar_clock_background_chip_fill_accent", true);
+        mChipFillColor    = Xprefs.getInt("status_bar_clock_background_chip_color", Color.WHITE);
+        mChipStrokeAccent = Xprefs.getBoolean("status_bar_clock_background_chip_stroke_accent", true);
+        mChipStrokeColor  = Xprefs.getInt("status_bar_clock_background_chip_stroke_color", Color.WHITE);
+        mChipStrokeWidth  = Xprefs.getInt("status_bar_clock_background_chip_stroke_width", 2);
+        mChipRoundCorners = Xprefs.getBoolean("status_bar_clock_background_chip_round_corners", false);
+        mChipCorner       = Xprefs.getInt("status_bar_clock_background_chip_corner", 14);
+        mChipMarginTop    = Xprefs.getInt("status_bar_clock_background_chip_margin_top", 0);
+        mChipMarginLeft   = Xprefs.getInt("status_bar_clock_background_chip_margin_left", 0);
+        mChipMarginRight  = Xprefs.getInt("status_bar_clock_background_chip_margin_right", 0);
+        mChipMarginBottom = Xprefs.getInt("status_bar_clock_background_chip_margin_bottom", 0);
+        mChipPadTop       = Xprefs.getInt("status_bar_clock_background_chip_padding_top", 0);
+        mChipPadLeft      = Xprefs.getInt("status_bar_clock_background_chip_padding_left", 0);
+        mChipPadRight     = Xprefs.getInt("status_bar_clock_background_chip_padding_right", 0);
+        mChipPadBottom    = Xprefs.getInt("status_bar_clock_background_chip_padding_bottom", 0);
 
         mShowSeconds = Xprefs.getBoolean("status_bar_clock_seconds", false);
         mAmPmStyle   = Integer.parseInt(Xprefs.getString("status_bar_am_pm", String.valueOf(AM_PM_GONE)));
 
         mDateDisplay = Integer.parseInt(Xprefs.getString("status_bar_clock_date_display", "0"));
         mDatePos     = Integer.parseInt(Xprefs.getString("status_bar_clock_date_position", "0"));
+        mDateFormat  = Xprefs.getString("status_bar_clock_date_format", "EEE, d MMM");
 
         mBeforeClock = Xprefs.getString("sbc_before_clock_format", "");
         mBeforeSmall = Xprefs.getBoolean("sbc_before_small", false);
@@ -213,16 +250,93 @@ public class StatusbarClock extends XposedMods {
                 case "status_bar_clock_auto_hide_launcher":
                     updateAutoHide();
                     break;
+                case "status_bar_clock_background_chip_switch":
+                case "status_bar_clock_background_chip_style":
+                case "status_bar_clock_background_chip_fill_accent":
+                case "status_bar_clock_background_chip_color":
+                case "status_bar_clock_background_chip_stroke_accent":
+                case "status_bar_clock_background_chip_stroke_color":
+                case "status_bar_clock_background_chip_stroke_width":
+                case "status_bar_clock_background_chip_round_corners":
+                case "status_bar_clock_background_chip_corner":
+                case "status_bar_clock_background_chip_margin_top":
+                case "status_bar_clock_background_chip_margin_left":
+                case "status_bar_clock_background_chip_margin_right":
+                case "status_bar_clock_background_chip_margin_bottom":
+                case "status_bar_clock_background_chip_padding_top":
+                case "status_bar_clock_background_chip_padding_left":
+                case "status_bar_clock_background_chip_padding_right":
+                case "status_bar_clock_background_chip_padding_bottom":
+                    updateChip();
+                    break;
                 default:
                     refreshClock();
                     break;
             }
+        } else {
+            // No specific key: called from the post-Xprefs refresh pass (background thread).
+            // All view operations must run on the main thread.
+            new Handler(Looper.getMainLooper()).post(() -> {
+                placeClock();
+                setClockSize();
+                refreshClock();
+                updateAutoHide();
+                updateChip();
+            });
+        }
+    }
+
+    private static int parseIntSafe(String s, int def) {
+        try { return Integer.parseInt(s); } catch (Throwable t) { return def; }
+    }
+
+    /** Reads clock font size live from Xprefs, falls back to cached mSize. */
+    private int liveClockSize() {
+        try {
+            return (Xprefs != null) ? Xprefs.getInt("status_bar_clock_size", mSize) : mSize;
+        } catch (Throwable t) {
+            return mSize;
+        }
+    }
+
+    /** Read an int pref directly from the XML file — no ContentProvider needed. */
+    private static int readIntFromPrefsFile(String key, int def) {
+        try {
+            java.io.File f = new java.io.File(
+                "/data/user_de/0/it.tugaia56.obsidian/shared_prefs/it.tugaia56.obsidian_preferences.xml");
+            if (!f.canRead()) return def;
+            java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(f));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) sb.append(line);
+            br.close();
+            String xml = sb.toString();
+            String tag = "name=\"" + key + "\"";
+            int idx = xml.indexOf(tag);
+            if (idx < 0) return def;
+            String rest = xml.substring(idx + tag.length());
+            int vi = rest.indexOf("value=\"");
+            if (vi < 0) return def;
+            rest = rest.substring(vi + 7);
+            int end = rest.indexOf('"');
+            if (end < 0) return def;
+            return Integer.parseInt(rest.substring(0, end).trim());
+        } catch (Throwable t) {
+            return def;
         }
     }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lp) throws Throwable {
         if (!SYSTEM_UI.equals(lp.packageName)) return;
+
+        // Pre-populate mSize from the prefs file before ContentProvider is available.
+        // Without this, the clock shows stock size for 1-3 s after SystemUI restart.
+        int preloadedSize = readIntFromPrefsFile("status_bar_clock_size", 0);
+        if (preloadedSize > 0) {
+            mSize = preloadedSize;
+            log("[ Obsidian ] StatusbarClock: preloaded mSize=" + mSize);
+        }
 
         // Register screen on/off receiver
         try {
@@ -292,6 +406,7 @@ public class StatusbarClock extends XposedMods {
                     setClockSize();
                     refreshClock();
                     updateAutoHide();
+                    updateChip();
                 }
             });
         } catch (Throwable t) {
@@ -400,19 +515,67 @@ public class StatusbarClock extends XposedMods {
             log("[ Obsidian ] StatusbarClock: getSmallTime after-hook failed: " + t);
         }
 
-        // ── 4. StatClock.updateMinWidth (OOS-specific) ────────────────────────
+        // ── 4. StatClock hooks (OC approach for SDK36) ───────────────────────────
+        //    On OOS16/SDK36, StatClock.onMeasure() resets the text size to stock (12sp)
+        //    on every layout pass. Hooking setTextSize on TextView causes oscillation.
+        //    OC's fix: afterHook onMeasure + updateConfigurationChanged + updateMinWidth
+        //    to re-assert our size after the system resets it (same as OC's implementation).
 
         try {
             Class<?> StatClock = findClass(
                     "com.oplus.systemui.statusbar.widget.StatClock", lp.classLoader);
 
+            // onMeasure: fires on every layout pass — re-assert size after measurement
+            hookAllMethods(StatClock, "onMeasure", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam p) {
+                    if (mClockView == null || p.thisObject != mClockView) return;
+                    int sz = liveClockSize();
+                    if (sz <= 0) return;
+                    TextView tv = (TextView) p.thisObject;
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, sz);
+                    // Recalculate measured width with the new text size
+                    String text = tv.getText() != null ? tv.getText().toString() : "";
+                    float textWidth = tv.getPaint().measureText(text);
+                    int w = (int)(textWidth + 0.5f) + tv.getPaddingLeft() + tv.getPaddingRight();
+                    try { callMethod(p.thisObject, "setMeasuredDimension", w, p.args[1]); }
+                    catch (Throwable ignored) {}
+                }
+            });
+
+            // updateConfigurationChanged: called on config changes (rotation, font scale…)
+            hookAllMethods(StatClock, "updateConfigurationChanged", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam p) {
+                    if (mClockView == null || p.thisObject != mClockView) return;
+                    int sz = liveClockSize();
+                    if (sz <= 0) return;
+                    TextView tv = (TextView) p.thisObject;
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, sz);
+                    try { tv.postInvalidate(); } catch (Throwable ignored) {}
+                }
+            });
+
+            // updateMinWidth: re-assert size and correct minimum width
             hookAllMethods(StatClock, "updateMinWidth", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam p) {
-                    ((TextView) p.thisObject).setTextSize(TypedValue.COMPLEX_UNIT_SP, mSize);
+                    if (mClockView == null || p.thisObject != mClockView) return;
+                    int sz = liveClockSize();
+                    if (sz <= 0) return;
+                    TextView tv = (TextView) p.thisObject;
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, sz);
+                    String text = tv.getText() != null ? tv.getText().toString() : "";
+                    float textWidth = tv.getPaint().measureText(text);
+                    int w = (int)(textWidth + 0.5f) + tv.getPaddingLeft() + tv.getPaddingRight();
+                    tv.setMinimumWidth(w);
                 }
             });
-        } catch (Throwable ignored) {}
+
+            log("[ Obsidian ] StatusbarClock: StatClock onMeasure/configChanged/minWidth hooked");
+        } catch (Throwable t) {
+            log("[ Obsidian ] StatusbarClock: StatClock hooks failed: " + t);
+        }
 
         // ── 5. Auto-hide launcher: TaskStackListenerImpl ──────────────────────
 
@@ -458,7 +621,7 @@ public class StatusbarClock extends XposedMods {
             mComputedAfterSmall  = mAfterSmall;
         } else if (mDateDisplay != DATE_GONE) {
             boolean small = (mDateDisplay == DATE_SMALL);
-            String fmt = "EEE, d MMM";
+            String fmt = (mDateFormat != null && !mDateFormat.isEmpty()) ? mDateFormat : "EEE, d MMM";
             if (mDatePos == DATE_BEFORE) {
                 mComputedBefore      = fmt;
                 mComputedBeforeSmall = small;
@@ -531,21 +694,25 @@ public class StatusbarClock extends XposedMods {
         ViewGroup target = null;
         Integer   index  = null;
         int extraPx = dp2px(mPadding);
+        int chipL = mChipOn ? dp2px(mChipPadLeft)   : 0;
+        int chipT = mChipOn ? dp2px(mChipPadTop)    : 0;
+        int chipR = mChipOn ? dp2px(mChipPadRight)  : 0;
+        int chipB = mChipOn ? dp2px(mChipPadBottom) : 0;
 
         switch (mPosition) {
             case POS_LEFT:
                 target = mStartSide;
                 index  = 1;
-                mClockView.setPadding(mStartPadding, 0, mStartPadding + extraPx, 0);
+                mClockView.setPadding(mStartPadding + chipL, chipT, mStartPadding + extraPx + chipR, chipB);
                 break;
             case POS_CENTER:
                 target = (mCenteredArea instanceof ViewGroup) ? (ViewGroup) mCenteredArea : null;
-                mClockView.setPadding(mStartPadding, 0, mStartPadding + extraPx, 0);
+                mClockView.setPadding(mStartPadding + chipL, chipT, mStartPadding + extraPx + chipR, chipB);
                 break;
             case POS_RIGHT:
                 if (mSystemIconArea != null)
                     target = (ViewGroup) mSystemIconArea.getParent();
-                mClockView.setPadding(mStartPadding, 0, extraPx, 0);
+                mClockView.setPadding(mStartPadding + chipL, chipT, extraPx + chipR, chipB);
                 break;
         }
 
@@ -554,6 +721,23 @@ public class StatusbarClock extends XposedMods {
             if (index != null) target.addView(mClockView, index);
             else                target.addView(mClockView);
         }
+
+        applyChipMargins();
+    }
+
+    /** Applica i margini del chip (indipendenti dal padding interno) come margini di layout
+     *  reali sulla view dell'orologio. */
+    private void applyChipMargins() {
+        if (mClockView == null) return;
+        ViewGroup.LayoutParams lp = mClockView.getLayoutParams();
+        if (!(lp instanceof ViewGroup.MarginLayoutParams mlp)) return;
+        if (mChipOn) {
+            mlp.setMargins(dp2px(mChipMarginLeft), dp2px(mChipMarginTop),
+                    dp2px(mChipMarginRight), dp2px(mChipMarginBottom));
+        } else {
+            mlp.setMargins(0, 0, 0, 0);
+        }
+        mClockView.setLayoutParams(mlp);
     }
 
     /** Apply font size and trigger layout. */
@@ -582,6 +766,60 @@ public class StatusbarClock extends XposedMods {
             } catch (Throwable ignored) {}
             if (mCustomColor) mClockView.setTextColor(mColor);
         });
+    }
+
+    /** Applica/rimuove il chip di sfondo dietro l'orologio (reale OC
+     *  status_bar_clock_background_chip): stile pieno/contorno/misto, colore di riempimento
+     *  e colore del bordo indipendenti (accento o personalizzati), angoli, margini, padding. */
+    private void updateChip() {
+        if (mClockView == null) return;
+        if (!mChipOn) {
+            mClockView.setBackground(null);
+            placeClock();
+            return;
+        }
+        int fillColor   = mChipFillAccent   ? systemAccentColor() : mChipFillColor;
+        int strokeColor = mChipStrokeAccent ? systemAccentColor() : mChipStrokeColor;
+        int fill = Color.TRANSPARENT;
+        int strokeWidth = 0;
+        switch (mChipStyle) {
+            case 1: // contorno
+                strokeWidth = dp2px(mChipStrokeWidth);
+                break;
+            case 2: // misto
+                fill = fillColor;
+                strokeWidth = dp2px(mChipStrokeWidth);
+                break;
+            default: // pieno
+                fill = fillColor;
+                break;
+        }
+        float corner = mChipRoundCorners ? dp2px(mChipCorner) : 0f;
+        mClockView.setBackground(tintBlockedChip(fill, strokeColor, strokeWidth, corner));
+        placeClock();
+    }
+
+    private int systemAccentColor() {
+        try { return mContext.getColor(android.R.color.system_accent1_600); }
+        catch (Throwable t) { return Color.WHITE; }
+    }
+
+    /** GradientDrawable che blocca il tint/colorFilter di sistema di OOS, come in
+     *  DstDialogStyle — altrimenti OOS sovrascrive il colore scelto dall'utente. */
+    private static GradientDrawable tintBlockedChip(int fill, int strokeColor, int strokeWidth,
+                                                      float cornerRadius) {
+        GradientDrawable d = new GradientDrawable() {
+            @Override public void setTint(int tintColor) { /* block OOS tint */ }
+            @Override public void setTintList(ColorStateList tint) { /* block OOS tint */ }
+            @Override public void setTintMode(PorterDuff.Mode tintMode) { /* block */ }
+            @Override public void setColorFilter(ColorFilter cf) { /* block OOS colorFilter */ }
+            @Override public void setColorFilter(int color, PorterDuff.Mode mode) { /* block */ }
+        };
+        d.setShape(GradientDrawable.RECTANGLE);
+        d.setColor(fill);
+        d.setCornerRadius(cornerRadius);
+        if (strokeWidth > 0) d.setStroke(strokeWidth, strokeColor);
+        return d;
     }
 
     private int dp2px(int dp) {

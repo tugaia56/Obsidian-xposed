@@ -21,6 +21,7 @@ import it.tugaia56.obsidian.R;
 import it.tugaia56.obsidian.ui.activity.MainActivity;
 import it.tugaia56.obsidian.ui.events.ColorSelectedEvent;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
+import it.tugaia56.obsidian.utils.ObsidianTheme;
 import it.tugaia56.obsidian.utils.SystemColorUtils;
 
 /**
@@ -61,6 +62,25 @@ public class SystemColorsFragment extends Fragment {
         mHexLabel = view.findViewById(R.id.systemColorHex);
         Button btnApply = view.findViewById(R.id.btnApplySystemColor);
 
+        com.google.android.material.card.MaterialCardView previewCard =
+                view.findViewById(R.id.systemColorPreviewCard);
+        com.google.android.material.card.MaterialCardView infoCard =
+                view.findViewById(R.id.systemColorInfoCard);
+        TextView tapHint   = view.findViewById(R.id.systemColorTapHint);
+        TextView infoTitle = view.findViewById(R.id.systemColorInfoTitle);
+        TextView infoBody  = view.findViewById(R.id.systemColorInfoBody);
+
+        int cardColor  = ObsidianTheme.cardColor();
+        int borderColor = ObsidianTheme.textColor(0x33);
+        previewCard.setCardBackgroundColor(cardColor);
+        previewCard.setStrokeColor(borderColor);
+        infoCard.setCardBackgroundColor(cardColor);
+        infoCard.setStrokeColor(borderColor);
+        mHexLabel.setTextColor(ObsidianTheme.textColor(0xCC));
+        tapHint.setTextColor(ObsidianTheme.textColor(0x55));
+        infoTitle.setTextColor(ObsidianTheme.textColor());
+        infoBody.setTextColor(ObsidianTheme.textColor(0x99));
+
         updateSwatch();
 
         view.findViewById(R.id.systemColorSwatchContainer)
@@ -72,7 +92,7 @@ public class SystemColorsFragment extends Fragment {
     private void openColorPicker() {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showColorPickerDialog(
-                    DIALOG_ID, mColor, false, true, true);
+                    DIALOG_ID, mColor, true, true, true);
         }
     }
 

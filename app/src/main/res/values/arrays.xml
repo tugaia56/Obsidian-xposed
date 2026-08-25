@@ -6,7 +6,9 @@
         <item>com.android.systemui</item>
         <item>com.android.settings</item>
         <item>com.android.launcher</item>
-    </string-array>
+        <item>it.simonesestito.ntiles</item>
+        <item>projekt.substratum.lite</item>
+	</string-array>
 
     <!-- DST ACCENT1 resource names (24 entries) -->
     <string-array name="dst_accent1_res_names">
@@ -79,16 +81,24 @@
     <!-- Clock font size (sp) -->
     <string-array name="clock_size_entries">
         <item>12 sp (default)</item>
+        <item>13 sp</item>
         <item>14 sp</item>
+        <item>15 sp</item>
         <item>16 sp</item>
+        <item>17 sp</item>
         <item>18 sp</item>
+        <item>19 sp</item>
         <item>20 sp</item>
     </string-array>
     <integer-array name="clock_size_values">
         <item>12</item>
+        <item>13</item>
         <item>14</item>
+        <item>15</item>
         <item>16</item>
+        <item>17</item>
         <item>18</item>
+        <item>19</item>
         <item>20</item>
     </integer-array>
 
@@ -106,6 +116,67 @@
         <item>8</item>
         <item>12</item>
         <item>16</item>
+    </integer-array>
+
+    <!-- Clock background chip style -->
+    <string-array name="clock_chip_style_entries">
+        <item>@string/clock_chip_style_solid</item>
+        <item>@string/clock_chip_style_outline</item>
+        <item>@string/clock_chip_style_mixed</item>
+    </string-array>
+
+    <!-- Clock chip corner radius -->
+    <string-array name="clock_chip_corner_entries">
+        <item>0 dp (square)</item>
+        <item>7 dp</item>
+        <item>14 dp (default)</item>
+        <item>21 dp</item>
+        <item>28 dp (pill)</item>
+    </string-array>
+    <integer-array name="clock_chip_corner_values">
+        <item>0</item>
+        <item>7</item>
+        <item>14</item>
+        <item>21</item>
+        <item>28</item>
+    </integer-array>
+
+    <!-- Clock chip padding -->
+    <string-array name="clock_chip_padding_entries">
+        <item>0 dp</item>
+        <item>4 dp</item>
+        <item>8 dp (default)</item>
+        <item>12 dp</item>
+        <item>16 dp</item>
+    </string-array>
+    <integer-array name="clock_chip_padding_values">
+        <item>0</item>
+        <item>4</item>
+        <item>8</item>
+        <item>12</item>
+        <item>16</item>
+    </integer-array>
+
+    <!-- Wi-Fi / Mobile signal icon size (dp) — stock size is 15dp -->
+    <string-array name="signal_icon_scale_entries">
+        <item>15 dp (default)</item>
+        <item>16 dp</item>
+        <item>17 dp</item>
+        <item>18 dp</item>
+        <item>19 dp</item>
+        <item>20 dp</item>
+        <item>21 dp</item>
+        <item>22 dp</item>
+    </string-array>
+    <integer-array name="signal_icon_scale_values">
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
+        <item>21</item>
+        <item>22</item>
     </integer-array>
 
     <!-- Date display -->
@@ -140,5 +211,535 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+
+    <!-- DST: CPB preset names (matches DSTCPB1..5 overlay order) -->
+    <string-array name="dst_cpb_preset_names">
+        <item>CPB Aurora Theme</item>
+        <item>CPB Arrow</item>
+        <item>CPB Radioactive</item>
+        <item>CPB Sprite Theme</item>
+        <item>CPB Stars</item>
+    </string-array>
+
+    <!-- DST: RVD preset names (DSTRVDAccent..DSTRVDOutlinedTrasp) -->
+    <string-array name="dst_rvd_preset_names">
+        <item>Round Accent</item>
+        <item>Round Accent Shade</item>
+        <item>Round Dark Gray</item>
+        <item>Round Light Gray</item>
+        <item>Round White</item>
+        <item>Round Outlined</item>
+        <item>Round Semi Transparent</item>
+        <item>Round Outlined Transparent</item>
+    </string-array>
+
+    <!-- DST: SVD preset names (DSTSVDAccent..DSTSVDOutlinedTrasp) -->
+    <string-array name="dst_svd_preset_names">
+        <item>Square Accent</item>
+        <item>Square Accent Shade</item>
+        <item>Square Dark Gray</item>
+        <item>Square Light Gray</item>
+        <item>Square White</item>
+        <item>Square Outlined</item>
+        <item>Square Semi Transparent</item>
+        <item>Square Outlined Transparent</item>
+    </string-array>
+
+    <string-array name="dst_toast_preset_names">
+        <item>Solid</item>
+        <item>Thin Edge</item>
+        <item>Thick Edge</item>
+        <item>Solid Accent</item>
+        <item>Semi-Transparent</item>
+        <item>Gradient Accent</item>
+        <item>Glass</item>
+        <item>Grey</item>
+        <item>Double Accent</item>
+        <item>Neutral Transparent</item>
+        <item>Accent + Overlay</item>
+        <item>Asymmetric Pill</item>
+    </string-array>
+
+    <!-- QS Header Clock: Red One behavior modes (order must match RED_ONE_MODE_* in
+         QsHeaderClockFragment: 0=default, 1=disable, 2=accent, 3=custom) -->
+    <string-array name="qs_header_red_one_mode_entries">
+        <item>@string/default_value</item>
+        <item>@string/dst_disable</item>
+        <item>@string/accent_color</item>
+        <item>@string/custom_color</item>
+    </string-array>
+
+    <!-- DST: Notification style preset names (DSTNFN* order — 4 transparent first) -->
+    <string-array name="dst_notif_preset_names">
+        <item>Thin Outline Transparent</item>
+        <item>Outline Transparent 25%</item>
+        <item>Outline Transparent 50%</item>
+        <item>Outline Transparent 75%</item>
+        <item>Outline Accent</item>
+        <item>Semi Transparent</item>
+        <item>Transparent</item>
+        <item>Pitch Black</item>
+        <item>Monet</item>
+        <item>Accent Solid</item>
+        <item>Layers</item>
+        <item>Thin Outline</item>
+        <item>Bottom Outline</item>
+        <item>Neumorph</item>
+        <item>Stack</item>
+        <item>Side Stack</item>
+        <item>Thick Outline</item>
+        <item>Lighty</item>
+        <item>Lighty v2</item>
+        <item>Lighty v3</item>
+        <item>Neumorph Outline</item>
+        <item>Cyberponk</item>
+        <item>Cyberponk v2</item>
+        <item>Thread Line</item>
+        <item>Faded</item>
+        <item>Dumbbell</item>
+        <item>Duoline</item>
+        <item>iOS</item>
+    </string-array>
+
+    <!-- Date format -->
+    <string-array name="clock_date_format_entries">
+        <item>dd/MM/yy</item>
+        <item>MM/dd/yy</item>
+        <item>yyyy-MM-dd</item>
+        <item>dd-MM-yyyy</item>
+        <item>MMM dd</item>
+        <item>MMM dd, yyyy</item>
+        <item>MMMM dd, yyyy</item>
+        <item>EEE</item>
+        <item>EEE dd</item>
+        <item>EEE dd/MM</item>
+        <item>EEE dd MMM</item>
+        <item>EEE MMM dd</item>
+        <item>EEE MMMM dd</item>
+        <item>EEEE dd/MM</item>
+        <item>EEE, d MMM (default)</item>
+    </string-array>
+    <string-array name="clock_date_format_values">
+        <item>dd/MM/yy</item>
+        <item>MM/dd/yy</item>
+        <item>yyyy-MM-dd</item>
+        <item>dd-MM-yyyy</item>
+        <item>MMM dd</item>
+        <item>MMM dd, yyyy</item>
+        <item>MMMM dd, yyyy</item>
+        <item>EEE</item>
+        <item>EEE dd</item>
+        <item>EEE dd/MM</item>
+        <item>EEE dd MMM</item>
+        <item>EEE MMM dd</item>
+        <item>EEE MMMM dd</item>
+        <item>EEEE dd/MM</item>
+        <item>EEE, d MMM</item>
+    </string-array>
+
+    <!-- DST: Notification corner radius preset names -->
+    <string-array name="dst_notif_corner_names">
+        <item>8 dp</item>
+        <item>12 dp</item>
+        <item>16 dp</item>
+        <item>20 dp</item>
+        <item>24 dp (default)</item>
+        <item>28 dp</item>
+        <item>32 dp</item>
+    </string-array>
+
+    <!-- Volume Panel -->
+    <string-array name="vol_panel_position_entries">
+        <item>@string/vol_panel_position_default</item>
+        <item>@string/vol_panel_position_right</item>
+        <item>@string/vol_panel_position_left</item>
+    </string-array>
+    <string-array name="vol_panel_position_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="vol_panel_timeout_entries">
+        <item>1 s</item>
+        <item>2 s</item>
+        <item>3 s</item>
+        <item>5 s</item>
+        <item>7 s</item>
+        <item>10 s</item>
+    </string-array>
+    <integer-array name="vol_panel_timeout_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>5</item>
+        <item>7</item>
+        <item>10</item>
+    </integer-array>
+
+    <!-- AOD: edge light style picker (UI-only placeholder names) -->
+    <!-- Real OC edge light styles (edge_light_style_entries in OC's own arrays.xml) -->
+    <string-array name="edge_light_style_entries">
+        <item>Disegna Linea</item>
+        <item>Lampeggio</item>
+        <item>Linee Laterali</item>
+        <item>Serpente</item>
+        <item>Eco</item>
+    </string-array>
+
+    <!-- AOD: edge light re-trigger interval -->
+    <string-array name="edge_light_retick_entries">
+        <item>@string/edge_light_30_sec</item>
+        <item>@string/edge_light_1_min</item>
+        <item>@string/edge_light_2_min</item>
+        <item>@string/edge_light_5_min</item>
+        <item>@string/edge_light_10_min</item>
+    </string-array>
+
+    <!-- AOD: edge light blur mode / type -->
+    <string-array name="edge_light_blur_mode_entries">
+        <item>@string/edge_light_blur_mode_both</item>
+        <item>@string/edge_light_blur_mode_blur_only</item>
+    </string-array>
+    <string-array name="edge_light_blur_type_entries">
+        <item>@string/edge_light_blur_type_normal</item>
+        <item>@string/edge_light_blur_type_solid</item>
+        <item>@string/edge_light_blur_type_inner</item>
+        <item>@string/edge_light_blur_type_outer</item>
+    </string-array>
+
+    <!-- AOD: edge light color mode -->
+    <string-array name="edge_light_color_mode_entries">
+        <item>@string/accent_color</item>
+        <item>@string/notification_color</item>
+        <item>@string/wallpaper_color</item>
+        <item>@string/edge_light_rainbow_gradient</item>
+        <item>@string/custom_color</item>
+    </string-array>
+
+    <!-- Orologio SdB: 61 stili reali, porting dei layout di OC -->
+    <string-array name="lockscreen_clock_style_entries">
+        <item>Stile orologio 1</item>
+        <item>Stile orologio 2</item>
+        <item>Stile orologio 3</item>
+        <item>Stile orologio 4</item>
+        <item>Stile orologio 5</item>
+        <item>Stile orologio 6</item>
+        <item>Stile orologio 7</item>
+        <item>Stile orologio 8</item>
+        <item>Stile orologio 9</item>
+        <item>Stile orologio 10</item>
+        <item>Stile orologio 11</item>
+        <item>Stile orologio 12</item>
+        <item>Stile orologio 13</item>
+        <item>Stile orologio 14</item>
+        <item>Stile orologio 15</item>
+        <item>Stile orologio 16</item>
+        <item>Stile orologio 17</item>
+        <item>Stile orologio 18</item>
+        <item>Stile orologio 19</item>
+        <item>Stile orologio 20</item>
+        <item>Stile orologio 21</item>
+        <item>Stile orologio 22</item>
+        <item>Stile orologio 23</item>
+        <item>Stile orologio 24</item>
+        <item>Stile orologio 25</item>
+        <item>Stile orologio 26</item>
+        <item>Stile orologio 27</item>
+        <item>Stile orologio 28</item>
+        <item>Stile orologio 29</item>
+        <item>Stile orologio 30</item>
+        <item>Stile orologio 31</item>
+        <item>Stile orologio 32</item>
+        <item>Stile orologio 33</item>
+        <item>Stile orologio 34</item>
+        <item>Stile orologio 35</item>
+        <item>Stile orologio 36</item>
+        <item>Stile orologio 37</item>
+        <item>Stile orologio 38</item>
+        <item>Stile orologio 39</item>
+        <item>Stile orologio 40</item>
+        <item>Stile orologio 41</item>
+        <item>Stile orologio 42</item>
+        <item>Stile orologio 43</item>
+        <item>Stile orologio 44</item>
+        <item>Stile orologio 45</item>
+        <item>Stile orologio 46</item>
+        <item>Stile orologio 47</item>
+        <item>Stile orologio 48</item>
+        <item>Stile orologio 49</item>
+        <item>Stile orologio 50</item>
+        <item>Stile orologio 51</item>
+        <item>Stile orologio 52</item>
+        <item>Stile orologio 53</item>
+        <item>Stile orologio 54</item>
+        <item>Stile orologio 55</item>
+        <item>Stile orologio 56</item>
+        <item>Stile orologio 57</item>
+        <item>Stile orologio 58</item>
+        <item>Stile orologio 59</item>
+        <item>Stile orologio 60</item>
+        <item>Stile orologio 61</item>
+    </string-array>
+
+    <!-- Orologio Intestazione QS -->
+    <string-array name="qs_header_clock_style_entries">
+        <item>None</item>
+        <item>Clock Style 1</item>
+        <item>Clock Style 2</item>
+        <item>Clock Style 3</item>
+        <item>Clock Style 4</item>
+        <item>Clock Style 5</item>
+        <item>Clock Style 6</item>
+        <item>Clock Style 7</item>
+        <item>Clock Style 8</item>
+    </string-array>
+
+    <!-- Orologio Intestazione QS: stock RED clock mode — reale OC, 4 opzioni (non on/off) -->
+    <string-array name="qs_header_stock_clock_red_one_entries">
+        <item>Predefinito</item>
+        <item>Disabilita</item>
+        <item>Colore Accento</item>
+        <item>Colore Personalizzato</item>
+    </string-array>
+
+<!-- Meteo SdB -->
+    <string-array name="weather_update_interval_entries">
+        <item>30 min</item>
+        <item>1 h</item>
+        <item>3 h</item>
+        <item>6 h</item>
+    </string-array>
+    <!-- Ordine allineato a OC: 0=OpenWeatherMap, 1=MET Norway, 2=OpenMeteo, 3=Yandex -->
+    <string-array name="weather_provider_entries">
+        <item>OpenWeatherMap</item>
+        <item>MET Norway</item>
+        <item>OpenMeteo</item>
+        <item>Yandex</item>
+    </string-array>
+    <string-array name="weather_units_entries">
+        <item>Metrico</item>
+        <item>Imperiale</item>
+    </string-array>
+    <string-array name="lockscreen_weather_bg_entries">
+        <item>Default</item>
+        <item>Semi-transparent box</item>
+        <item>Semi-transparent box (round)</item>
+        <item>Pill</item>
+        <item>Rounded, simple and with accent</item>
+        <item>Rounded, transparent and with accent</item>
+        <item>Gradient</item>
+        <item>Dark with accented borders</item>
+        <item>Dark with gradient borders</item>
+    </string-array>
+
+    <!-- Widget SdB -->
+    <string-array name="lockscreen_widget_entries">
+        <item>Nessuno</item>
+        <item>App Personalizzata</item>
+        <item>Calcolatrice</item>
+        <item>Media</item>
+        <item>Timer</item>
+        <item>Torcia</item>
+        <item>Meteo</item>
+        <item>Wi-Fi</item>
+        <item>Dati Mobili (in costruzione)</item>
+        <item>Suoneria</item>
+        <item>Bluetooth</item>
+        <item>Controlli Casa</item>
+        <item>Fotocamera</item>
+        <item>Wallet</item>
+        <item>Hotspot (in costruzione)</item>
+    </string-array>
+    <!-- Lockscreen album cover filter -->
+    <string-array name="lockscreen_album_art_filter_entries">
+        <item>@string/lockscreen_album_art_filter_none</item>
+        <item>@string/lockscreen_album_art_filter_grayscale</item>
+        <item>@string/lockscreen_album_art_filter_accent</item>
+        <item>@string/lockscreen_album_art_filter_blur</item>
+        <item>@string/lockscreen_album_art_filter_gray_blur</item>
+    </string-array>
+
+    <!-- Battery percentage font size -->
+    <string-array name="battery_percent_size_entries">
+        <item>8 sp</item>
+        <item>9 sp</item>
+        <item>10 sp</item>
+        <item>11 sp</item>
+        <item>12 sp (default)</item>
+        <item>13 sp</item>
+        <item>14 sp</item>
+        <item>15 sp</item>
+        <item>16 sp</item>
+        <item>18 sp</item>
+        <item>20 sp</item>
+    </string-array>
+    <integer-array name="battery_percent_size_values">
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+    </integer-array>
+
+    <!-- Battery icon style names (index matches BatteryIconFragment.STYLE_VALUES) -->
+    <string-array name="battery_style_names">
+        <item>RLandscape (Default)</item>
+        <item>Landscape</item>
+        <item>Portrait Capsule</item>
+        <item>Portrait Lorn</item>
+        <item>Portrait MX</item>
+        <item>Portrait Airoo</item>
+        <item>RLandscape Style A</item>
+        <item>Landscape Style A</item>
+        <item>RLandscape Style B</item>
+        <item>Landscape Style B</item>
+        <item>Landscape iOS 15</item>
+        <item>Landscape iOS 16</item>
+        <item>Portrait Origami</item>
+        <item>Landscape Smiley</item>
+        <item>Landscape MIUI Pill</item>
+        <item>Landscape ColorOS</item>
+        <item>RLandscape ColorOS</item>
+        <item>Landscape Battery A</item>
+        <item>Landscape Battery B</item>
+        <item>Landscape Battery C</item>
+        <item>Landscape Battery D</item>
+        <item>Landscape Battery E</item>
+        <item>Landscape Battery F</item>
+        <item>Landscape Battery G</item>
+        <item>Landscape Battery H</item>
+        <item>Landscape Battery I</item>
+        <item>Landscape Battery J</item>
+        <item>Landscape Battery K</item>
+        <item>Landscape Battery L</item>
+        <item>Landscape Battery M</item>
+        <item>Landscape Battery N</item>
+        <item>Landscape Battery O</item>
+        <item>Circle</item>
+        <item>Dotted Circle</item>
+        <item>Filled Circle</item>
+        <item>Landscape Kim</item>
+        <item>Landscape One UI 7</item>
+    </string-array>
+
+    <!-- Barra di Navigazione: modalità override tieni premuto -->
+    <string-array name="gesture_holdback_mode_entries">
+        <item>Stesso comando per entrambi i lati</item>
+        <item>Scegli comando per lato</item>
+    </string-array>
+
+    <!-- Barra di Navigazione: comandi tieni premuto -->
+    <string-array name="gesture_holdback_commands_entries">
+        <item>Passa all\'app precedente</item>
+        <item>Chiudi app attiva</item>
+        <item>Screenshot</item>
+        <item>Screenshot scorrevole</item>
+        <item>Screenshot parziale</item>
+        <item>Apri Impostazioni Rapide (non disponibile)</item>
+        <item>Attiva modalità a una mano (non disponibile)</item>
+        <item>Apri pannello notifiche (non disponibile)</item>
+        <item>Spegni schermo</item>
+        <item>Cerchia per cercare (non disponibile)</item>
+        <item>App personalizzata (non disponibile)</item>
+    </string-array>
+
+    <!-- Impostazioni rapide: lato apertura rapida -->
+    <string-array name="quick_pulldown_side_entries">
+        <item>Sinistra</item>
+        <item>Destra</item>
+    </string-array>
+
+    <!-- Notifiche Barra di Stato: espansione predefinita -->
+    <string-array name="notif_default_expansion_entries">
+        <item>Predefinito</item>
+        <item>Espandi sempre</item>
+        <item>Comprimi sempre</item>
+        <item>Scelta per app</item>
+    </string-array>
+
+    <!-- Stile Icone Impostazioni (pack HOS): colore sfondo / colore icona -->
+    <string-array name="settings_icons_color_entries">
+        <item>Colore Accento</item>
+        <item>Bianco</item>
+        <item>Nero</item>
+    </string-array>
+
+    <!-- Stile Icone Impostazioni (pack HOS): forma sfondo -->
+    <string-array name="settings_icons_shape_entries">
+        <item>Cerchio</item>
+        <item>Supercerchio</item>
+        <item>Quadrato arrotondato</item>
+        <item>Goccia</item>
+        <item>Rombo</item>
+    </string-array>
+
+    <!-- Stile Icone Impostazioni (pack HOS): sfondo solido on/off -->
+    <string-array name="settings_icons_solid_entries">
+        <item>Off</item>
+        <item>On</item>
+    </string-array>
+
+    <!-- Personalizza Riquadri (QsTilesCustomizeFragment) -->
+    <string-array name="qs_tile_animation_style_entries">
+        <item>Off</item>
+        <item>Rotate</item>
+        <item>Flip X</item>
+        <item>Flip Y</item>
+        <item>Shake</item>
+        <item>Fade In</item>
+        <item>Bounce X</item>
+        <item>Bounce Y</item>
+        <item>Pulse X</item>
+        <item>Pulse Y</item>
+    </string-array>
+    <string-array name="qs_tile_animation_interpolator_entries">
+        <item>Linear</item>
+        <item>Accelerate</item>
+        <item>Decelerate</item>
+        <item>Accelerate/Decelerate</item>
+        <item>Bounce</item>
+        <item>Overshoot</item>
+        <item>Anticipate</item>
+        <item>Anticipate/Overshoot</item>
+    </string-array>
+    <string-array name="qs_tile_transitions_entries">
+        <item>Off</item>
+        <item>Cube In</item>
+        <item>Cube Out</item>
+        <item>Accordion</item>
+        <item>Background to Foreground</item>
+        <item>Depth Page</item>
+        <item>Fade</item>
+        <item>Foreground to Background</item>
+        <item>Rotate Down</item>
+        <item>Rotate Up</item>
+        <item>Stack</item>
+        <item>Tablet</item>
+        <item>Zoom In</item>
+        <item>Zoom Out</item>
+        <item>Zoom Out Slide</item>
+        <item>Raise from Center</item>
+        <item>Rotate about Bottom</item>
+        <item>Translate Y (top to bottom)</item>
+        <item>Translate Y (bottom to top)</item>
+    </string-array>
+    <string-array name="brightness_slider_style_entries">
+        <item>Default</item>
+        <item>Accent Color</item>
+        <item>Custom Color</item>
+    </string-array>
+    <string-array name="qs_brightness_icon_entries">
+        <item>Default</item>
+        <item>Dark</item>
+        <item>White</item>
+        <item>Accent</item>
+        <item>Custom</item>
     </string-array>
 </resources>

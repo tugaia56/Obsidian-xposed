@@ -10,13 +10,13 @@
     android:paddingTop="20dp"
     android:paddingBottom="6dp">
 
-    <!-- Accent bar -->
+    <!-- Accent bar — colour set programmatically from DST accent -->
     <View
+        android:id="@+id/sectionAccentBar"
         android:layout_width="3dp"
         android:layout_height="14dp"
         android:layout_marginEnd="8dp"
-        android:background="@color/obs_primary"
-        android:backgroundTint="@color/obs_primary" />
+        android:background="@color/obs_primary" />
 
     <TextView
         android:id="@+id/sectionTitle"

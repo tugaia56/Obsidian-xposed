@@ -27,6 +27,7 @@ import it.tugaia56.obsidian.ui.events.ColorSelectedEvent;
 import it.tugaia56.obsidian.utils.Constants;
 import it.tugaia56.obsidian.utils.DarkShadowUtils;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
+import it.tugaia56.obsidian.utils.ObsidianTheme;
 import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
 
 import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PIN;
@@ -81,6 +82,7 @@ public class PinStyleFragment extends Fragment {
                 getString(R.string.section_pin_bg_style),
                 pinBgLabel(),
                 this::showPinBgDialog);
+        pinBgItem.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.TOP;
         pinBgAdapter = new ListWidgetAdapter(List.of(pinBgItem));
 
         // ── PIN Numeri ───────────────────────────────────────────────────────
@@ -88,6 +90,7 @@ public class PinStyleFragment extends Fragment {
                 getString(R.string.section_pin_num_style),
                 pinNumLabel(),
                 this::showPinNumDialog);
+        pinNumItem.groupPos = it.tugaia56.obsidian.utils.ObsidianTheme.GroupPos.BOTTOM;
         pinNumAdapter = new ListWidgetAdapter(List.of(pinNumItem));
 
         rv.setAdapter(new ConcatAdapter(pinBgAdapter, pinNumAdapter));
@@ -103,7 +106,7 @@ public class PinStyleFragment extends Fragment {
         for (int i = 0; i < values.length; i++) if (values[i].equals(current)) { currentIdx = i; break; }
 
         final int[] sel = {currentIdx};
-        new MaterialAlertDialogBuilder(requireContext())
+        ObsidianTheme.themeDialog(new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.section_pin_bg_style)
                 .setSingleChoiceItems(entries, currentIdx, (d, which) -> sel[0] = which)
                 .setPositiveButton(R.string.apply, (d, w) -> {
@@ -115,7 +118,7 @@ public class PinStyleFragment extends Fragment {
                         mPendingDialogId = mPinBgCustomDialogId;
                         if (getActivity() instanceof MainActivity) {
                             ((MainActivity) getActivity()).showColorPickerDialog(
-                                    mPinBgCustomDialogId, saved, false, true, true);
+                                    mPinBgCustomDialogId, saved, true, true, true);
                         }
                         updatePinBgSummary(entries[sel[0]]);
                         return;
@@ -128,7 +131,7 @@ public class PinStyleFragment extends Fragment {
                     updatePinBgSummary(entries[sel[0]]);
                 })
                 .setNegativeButton(R.string.cancel, null)
-                .show();
+                .show());
     }
 
     // ── PIN Numeri dialog ─────────────────────────────────────────────────────
@@ -141,7 +144,7 @@ public class PinStyleFragment extends Fragment {
         for (int i = 0; i < values.length; i++) if (values[i].equals(current)) { currentIdx = i; break; }
 
         final int[] sel = {currentIdx};
-        new MaterialAlertDialogBuilder(requireContext())
+        ObsidianTheme.themeDialog(new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.section_pin_num_style)
                 .setSingleChoiceItems(entries, currentIdx, (d, which) -> sel[0] = which)
                 .setPositiveButton(R.string.apply, (d, w) -> {
@@ -153,7 +156,7 @@ public class PinStyleFragment extends Fragment {
                         mPendingDialogId = mPinNumCustomDialogId;
                         if (getActivity() instanceof MainActivity) {
                             ((MainActivity) getActivity()).showColorPickerDialog(
-                                    mPinNumCustomDialogId, saved, false, true, true);
+                                    mPinNumCustomDialogId, saved, true, true, true);
                         }
                         updatePinNumSummary(entries[sel[0]]);
                         return;
@@ -166,7 +169,7 @@ public class PinStyleFragment extends Fragment {
                     updatePinNumSummary(entries[sel[0]]);
                 })
                 .setNegativeButton(R.string.cancel, null)
-                .show();
+                .show());
     }
 
     // ── EventBus: custom color picked ────────────────────────────────────────
