@@ -149,9 +149,12 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
         setupGlobalSearch();
 
         mBottomNav.setOnItemSelectedListener(item -> {
-            popAllBackStack();
-            switchTab(item.getItemId());
-            showHomeActionBar();
+            if (item.getItemId() == R.id.tab_search) {
+                showSearchTab();
+            } else {
+                switchTab(item.getItemId());
+                showHomeActionBar();
+            }
             return true;
         });
 
@@ -401,20 +404,33 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
             if (mSearchEmptyTv != null) mSearchEmptyTv.setVisibility(View.GONE);
             return;
         }
-        String q = query.toLowerCase(Locale.getDefault()).trim();
+        // Split into words so a multi-word query like "abilita barra batteria" matches an entry
+        // whose title/keywords cover those words separately (e.g. title "Icone Batteria" + a
+        // "barra batteria" keyword) — matching the whole query as one substring against a single
+        // field never found anything unless someone typed the exact title.
+        String[] words = query.toLowerCase(Locale.getDefault()).trim().split("\\s+");
         List<SearchEntry> results = new ArrayList<>();
         for (SearchEntry e : mAllSearchItems) {
-            boolean match = e.title.toLowerCase(Locale.getDefault()).contains(q)
-                    || (e.subtitle != null && e.subtitle.toLowerCase(Locale.getDefault()).contains(q));
-            if (!match) {
-                for (String kw : e.keywords) {
-                    if (kw != null && kw.toLowerCase(Locale.getDefault()).contains(q)) {
-                        match = true;
-                        break;
+            boolean allWordsMatch = true;
+            for (String word : words) {
+                // e.subtitle is NOT matched here on purpose: for nested entries it's a "lives
+                // under X" breadcrumb (e.g. "Barra di Stato"), not a description of what the
+                // entry does — matching it made searching "barra" surface every single mod
+                // filed under that section (clock style, notifications, ...) regardless of
+                // relevance. Top-level section entries keep their own topic words as keywords,
+                // so they stay findable without this.
+                boolean wordMatch = e.title.toLowerCase(Locale.getDefault()).contains(word);
+                if (!wordMatch) {
+                    for (String kw : e.keywords) {
+                        if (kw != null && kw.toLowerCase(Locale.getDefault()).contains(word)) {
+                            wordMatch = true;
+                            break;
+                        }
                     }
                 }
+                if (!wordMatch) { allWordsMatch = false; break; }
             }
-            if (match) results.add(e);
+            if (allWordsMatch) results.add(e);
         }
         if (results.isEmpty()) {
             // Hiding the (empty) results RV here would just reveal the tab underneath —
@@ -563,8 +579,10 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
                 R.drawable.ic_notifications, 0xFF7C4DFF, R.id.tab_mods,
                 StatusbarFragment::new, getString(R.string.nav_statusbar),
                 "batteria", "battery", "orologio", "clock", "icone", "icons",
-                "luminosità", "brightness", "frecce", "wifi", "mobile",
-                "notifiche", "notifications", "stile icone"));
+                "luminosità", "brightness", "controllo luminosità", "frecce", "wifi", "mobile",
+                "notifiche", "notifications", "stile icone",
+                "bluetooth", "doppio tap", "double tap", "spegnere", "spegni", "screen off",
+                "popup appunti", "clipboard", "blocca popup"));
 
         all.add(new SearchEntry(
                 getString(R.string.nav_lock_screen_options),
@@ -625,7 +643,10 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
                 getString(R.string.nav_battery_icons_summary),
                 R.drawable.ic_battery, 0xFFFF9800, R.id.tab_dst,
                 BatteryIconFragment::new, getString(R.string.nav_battery_icons),
-                "batteria", "battery", "icone", "icons"));
+                "batteria", "battery", "icone", "icons",
+                "barra batteria", "battery bar", "barra", "bar",
+                "abilita", "enable", "critico", "critical", "avviso", "warning",
+                "carica", "charging", "risparmio energetico", "power save"));
 
         all.add(new SearchEntry(
                 getString(R.string.nav_settings_icons),
@@ -664,7 +685,9 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
                 getString(R.string.nav_settings_general_summary),
                 R.drawable.ic_settings, 0xFF7C4DFF, R.id.tab_settings,
                 SettingsGeneralFragment::new, getString(R.string.nav_settings_general),
-                "generale", "general", "lingua", "language", "icona", "icon"));
+                "generale", "general", "lingua", "language", "icona", "icon",
+                "tema", "theme", "tab predefinito", "default tab",
+                "log aggiuntivi", "extra logs", "debug", "bug report"));
 
         all.add(new SearchEntry(
                 getString(R.string.settings_section),
@@ -866,6 +889,12 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
     }
 
     private void switchTab(int tabId) {
+        // Without this, any sub-screens pushed via navigateTo() on the PREVIOUS tab stayed on
+        // the back stack — pressing Back after switching tabs could resurface a stale sub-screen
+        // from a different tab entirely, with the bottom nav highlight left pointing at the
+        // wrong tab too. Every real tab switch should start from that tab's own top level.
+        popAllBackStack();
+
         Fragment fragment;
         if (tabId == R.id.tab_mods)          fragment = new GestioneModsTabFragment();
         else if (tabId == R.id.tab_settings) fragment = new ImpostazioniTabFragment();
@@ -906,12 +935,45 @@ public class MainActivity extends AppCompatActivity implements ColorPickerDialog
             getLayoutInflater().inflate(R.layout.item_home_header, mHomeHeaderContainer, true);
             mHomeHeaderContainer.setVisibility(View.VISIBLE);
         }
-        // Show global search bar (with results if text is still present)
+        // Search now lives only on its own dedicated "Cerca" tab (see showSearchTab()) — the
+        // 3 regular tabs no longer show an embedded search bar, so make sure it's off here.
+        if (mGlobalSearchContainer != null) mGlobalSearchContainer.setVisibility(View.GONE);
+    }
+
+    /** Dedicated "Cerca" tab — the search bar with nothing competing for space above it (no
+     *  home logo/tagline), so it never ends up half-covered by the keyboard the way it could
+     *  when embedded in the 3 regular tabs. */
+    private void showSearchTab() {
+        popAllBackStack();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new Fragment())
+                .commit();
+
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            ab.setCustomView(null);
+            ab.setDisplayShowCustomEnabled(false);
+            ab.setDisplayShowHomeEnabled(false);
+            ab.setDisplayHomeAsUpEnabled(false);
+            ab.setDisplayShowTitleEnabled(true);
+            ab.setTitle(getString(R.string.tab_search));
+        }
+        if (mHomeHeaderContainer != null) mHomeHeaderContainer.setVisibility(View.GONE);
         if (mGlobalSearchContainer != null) {
             mGlobalSearchContainer.setVisibility(View.VISIBLE);
             if (mGlobalSearchEt != null && mGlobalSearchEt.getText().length() > 0) {
                 filterSearch(mGlobalSearchEt.getText().toString());
             }
+        }
+        if (mGlobalSearchEt != null) {
+            mGlobalSearchEt.requestFocus();
+            mGlobalSearchEt.post(() -> {
+                android.view.inputmethod.InputMethodManager imm =
+                        (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(mGlobalSearchEt, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+                }
+            });
         }
     }
 

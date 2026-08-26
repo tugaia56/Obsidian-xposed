@@ -13,10 +13,15 @@ public class XPrefs {
         Xprefs.registerOnSharedPreferenceChangeListener(listener);
     }
     public static void loadEverything(String... key) {
+        // Stessa chiave/semantica di "moreLogging" in OC — un solo switch in Impostazioni >
+        // Generale, applicato subito (nessun restart SystemUI necessario) perché questo
+        // listener gira già ad ogni cambio pref.
+        boolean moreLogging = Xprefs.getBoolean("more_logging", false);
         // Un mod che lancia un'eccezione (es. un pref con tipo cambiato tra versioni) non deve
         // impedire agli altri mod di aggiornarsi, né tantomeno destabilizzare SystemUI.
         for (XposedMods mod : XPLauncher.runningMods) {
             try {
+                mod.mDebug = moreLogging;
                 mod.updatePrefs(key);
             } catch (Throwable t) {
                 XposedBridge.log("[ Obsidian ] " + mod.getClass().getSimpleName() + ".updatePrefs failed: " + t);

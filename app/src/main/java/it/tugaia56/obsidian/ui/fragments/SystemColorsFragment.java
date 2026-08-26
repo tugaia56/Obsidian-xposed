@@ -84,7 +84,7 @@ public class SystemColorsFragment extends Fragment {
         updateSwatch();
 
         view.findViewById(R.id.systemColorSwatchContainer)
-                .setOnClickListener(v -> openColorPicker());
+                .setOnClickListener(v -> showColorModeDialog());
 
         btnApply.setOnClickListener(v -> applyColor());
     }
@@ -94,6 +94,24 @@ public class SystemColorsFragment extends Fragment {
             ((MainActivity) getActivity()).showColorPickerDialog(
                     DIALOG_ID, mColor, true, true, true);
         }
+    }
+
+    /** "Applica" already requires a separate tap after picking a colour (existing UX) — Accento
+     *  just fills mColor from the app's own accent instead of opening the raw picker first. */
+    private void showColorModeDialog() {
+        String[] entries = { getString(R.string.color_mode_accent), getString(R.string.color_mode_custom) };
+        ObsidianTheme.themeDialog(new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.nav_system_colors)
+                .setItems(entries, (d, which) -> {
+                    if (which == 0) {
+                        mColor = ObsidianTheme.accentColor();
+                        ObsidianPrefs.putInt(SystemColorUtils.PREF_SYSTEM_COLOR, mColor);
+                        updateSwatch();
+                    } else {
+                        openColorPicker();
+                    }
+                })
+                .show());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

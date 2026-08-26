@@ -5,6 +5,8 @@
     <string name="search_clear_history">Clear search history</string>
     <string name="color_mode_accent">Accent color</string>
     <string name="color_mode_custom">Custom color</string>
+    <string name="color_mode_stock">Stock color</string>
+    <string name="color_mode_transparent">Transparent</string>
     <string name="color_mode_default">Default</string>
     <string name="aod_clock_switch_title">Custom AOD Clock</string>
 
@@ -95,6 +97,11 @@
     <string name="tab_dst">Obsidian Theme </string>
     <string name="tab_mods">Mods</string>
     <string name="tab_settings">Settings</string>
+    <string name="tab_search">Search</string>
+    <!-- Bottom nav label only — full name ("Obsidian Theme") gets clipped by the screen's
+         rounded corner at 4-tab width; the "default tab" picker in Impostazioni still uses
+         the full tab_dst string, which has room there. -->
+    <string name="tab_dst_short">Obsidian</string>
 
     <!-- Home nav menu -->
     <string name="nav_dst_colors">Obsidian Theme</string>
@@ -305,12 +312,18 @@
     <string name="show_advanced_reboot_title">Advanced Reboot</string>
     <string name="show_advanced_reboot_summary">Add advanced reboot options to power menu</string>
     <string name="use_auth_for_advanced_reboot_title">Use Authentication</string>
-    <string name="use_auth_for_advanced_reboot_summary">Require authentication to use advanced reboot options</string>
+    <string name="use_auth_for_advanced_reboot_summary">Require authentication to reboot or shut down, including the stock slider</string>
     <string name="advanced_reboot_y_offset_title">Y Offset</string>
+    <string name="advanced_reboot_color_title">Button Color</string>
     <string name="advanced_reboot_y_offset_summary">Move advanced reboot button down</string>
     <string name="advanced_reboot_title">Advanced Reboot</string>
     <string name="advanced_reboot_auth">Advanced Reboot Authentication</string>
     <string name="advanced_reboot_auth_summary">Authenticate to show advanced reboot options</string>
+    <string name="power_menu_gradient_color_title">Reboot/Shutdown Color</string>
+    <string name="power_menu_bg_color_title">Slider Background</string>
+    <string name="power_menu_border_title">Slider Border</string>
+    <string name="power_menu_border_summary">Draw an outline around the reboot/shutdown slider</string>
+    <string name="power_menu_border_color_title">Border Color</string>
     <string name="advanced_reboot_auth_failed">Authentication failed</string>
     <string name="advanced_reboot_recovery">Recovery</string>
     <string name="advanced_reboot_bootloader">Bootloader</string>
@@ -702,6 +715,9 @@
     <string name="settings_language_summary">System</string>
 
     <string name="settings_layout_section">Layout</string>
+    <string name="settings_debug_section">Debug</string>
+    <string name="more_logging_title">Extra Logs</string>
+    <string name="more_logging_summary">Enable extra logs.\nCan help when sending Bug Reports.</string>
     <string name="settings_default_tab_title">Choose default tab</string>
 
     <string name="settings_check_updates">Check for Updates</string>

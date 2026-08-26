@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -33,6 +35,7 @@ import it.tugaia56.obsidian.utils.AppUtils;
 import it.tugaia56.obsidian.utils.Constants;
 import it.tugaia56.obsidian.utils.DarkShadowUtils;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
+import it.tugaia56.obsidian.utils.ObsidianTheme;
 import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
 
 import static it.tugaia56.obsidian.utils.DarkShadowUtils.PREF_PREFIX;
@@ -173,12 +176,7 @@ public class ClockDateFragment extends Fragment {
     }
 
     private void onSbiSwatch(DarkShadowItem item, int dialogId) {
-        mPendingDialogId = dialogId;
-        mPendingIsClock  = false;
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showColorPickerDialog(
-                    dialogId, item.getColor(), true, true, true);
-        }
+        showColorAccentChoice(item, dialogId, PREF_PREFIX + SBI_OVERLAY, false, this::onSbiEnabled, sbiAdapter);
     }
 
     // ── Clock color callbacks ─────────────────────────────────────────────────
@@ -195,12 +193,38 @@ public class ClockDateFragment extends Fragment {
     }
 
     private void onClockColorSwatch(DarkShadowItem item, int dialogId) {
-        mPendingDialogId = dialogId;
-        mPendingIsClock  = true;
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showColorPickerDialog(
-                    dialogId, item.getColor(), true, true, true);
-        }
+        showColorAccentChoice(item, dialogId, PREF_CLOCK_COLOR, true, this::onClockColorEnabled, clockColorAdapter);
+    }
+
+    /** Accento/Personalizzato inserted before the swatch opens the raw picker — Accento resolves
+     *  immediately (reuses the file's existing onXxxEnabled save path), Personalizzato falls
+     *  through to mPendingDialogId/mPendingIsClock + the real picker, same as before. */
+    private void showColorAccentChoice(DarkShadowItem item, int dialogId, String colorKey,
+                                        boolean isClock, java.util.function.Consumer<DarkShadowItem> onEnabled,
+                                        DarkShadowColorListener adapter) {
+        String[] entries = { getString(R.string.color_mode_accent), getString(R.string.color_mode_custom) };
+        boolean currentAccent = ObsidianPrefs.getBoolean(colorKey + "_use_accent", false);
+        final int[] selected = {currentAccent ? 0 : 1};
+        ObsidianTheme.themeDialog(new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(item.getName())
+                .setSingleChoiceItems(entries, selected[0], (d, which) -> selected[0] = which)
+                .setPositiveButton(R.string.apply, (d, w) -> {
+                    boolean useAccent = selected[0] == 0;
+                    ObsidianPrefs.putBoolean(colorKey + "_use_accent", useAccent);
+                    if (useAccent) {
+                        item.setColor(ObsidianTheme.accentColor());
+                        onEnabled.accept(item);
+                        if (adapter != null) adapter.notifyDataSetChanged();
+                    } else {
+                        mPendingDialogId = dialogId;
+                        mPendingIsClock  = isClock;
+                        if (getActivity() instanceof MainActivity) {
+                            ((MainActivity) getActivity()).showColorPickerDialog(dialogId, item.getColor(), true, true, true);
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show());
     }
 
     // ── Color picker result ───────────────────────────────────────────────────
@@ -213,11 +237,13 @@ public class ClockDateFragment extends Fragment {
         if (mPendingIsClock) {
             mPendingIsClock = false;
             DarkShadowItem item = clockColorItems.get(0);
+            ObsidianPrefs.putBoolean(PREF_CLOCK_COLOR + "_use_accent", false); // picking a colour implies custom
             item.setColor(event.color());
             ObsidianPrefs.putInt(PREF_CLOCK_COLOR, event.color());
             if (clockColorAdapter != null) clockColorAdapter.notifyDataSetChanged();
         } else {
             DarkShadowItem item = sbiItems.get(0);
+            ObsidianPrefs.putBoolean(DarkShadowUtils.PREF_PREFIX + item.getOverlayName() + "_use_accent", false); // picking a colour implies custom
             item.setColor(event.color());
             ObsidianPrefs.putInt(DarkShadowUtils.PREF_PREFIX + item.getOverlayName(), event.color());
             if (sbiAdapter != null) sbiAdapter.notifyDataSetChanged();

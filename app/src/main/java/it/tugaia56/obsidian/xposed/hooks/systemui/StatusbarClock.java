@@ -198,7 +198,8 @@ public class StatusbarClock extends XposedMods {
         mSize        = Xprefs.getInt("status_bar_clock_size",    12);
         mPadding     = Xprefs.getInt("status_bar_clock_padding", 0);
         mCustomColor = Xprefs.getBoolean("status_bar_custom_clock_color", false);
-        mColor       = Xprefs.getInt("status_bar_clock_color", Color.WHITE);
+        mColor       = Xprefs.getBoolean("status_bar_clock_color_use_accent", false)
+                ? appAccentColor() : Xprefs.getInt("status_bar_clock_color", Color.WHITE);
 
         mChipOn           = Xprefs.getBoolean("status_bar_clock_background_chip_switch", false);
         mChipStyle        = parseIntSafe(Xprefs.getString("status_bar_clock_background_chip_style", "0"), 0);
@@ -826,6 +827,13 @@ public class StatusbarClock extends XposedMods {
         return Math.round(TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, dp,
                 mContext.getResources().getDisplayMetrics()));
+    }
+
+    private int appAccentColor() {
+        if (Xprefs.getBoolean("DST_ACCENT1_on", false)) {
+            return Xprefs.getInt("DST_ACCENT1", 0xFF908DFF) | 0xFF000000;
+        }
+        return 0xFF908DFF;
     }
 
     @Override

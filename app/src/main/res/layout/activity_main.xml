@@ -17,7 +17,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/global_search_container" />
 
-    <!-- Global search bar + drag handle. Same visibility lifecycle as home header. -->
+    <!-- Global search bar + drag handle. Same visibility lifecycle as home header — except on
+         the dedicated Cerca tab, where the header is hidden and this becomes the top view. -->
     <FrameLayout
         android:id="@+id/global_search_container"
         android:layout_width="0dp"
@@ -78,6 +79,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:menu="@menu/bottom_nav_menu"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

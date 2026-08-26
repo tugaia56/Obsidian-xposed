@@ -5,6 +5,8 @@
     <string name="search_clear_history">Cancella cronologia ricerche</string>
     <string name="color_mode_accent">Colore accento</string>
     <string name="color_mode_custom">Colore personalizzato</string>
+    <string name="color_mode_stock">Colore stock</string>
+    <string name="color_mode_transparent">Trasparente</string>
     <string name="color_mode_default">Predefinito</string>
     <string name="aod_clock_switch_title">Orologio Personalizzato</string>
 
@@ -95,6 +97,8 @@
     <string name="tab_dst">Obsidian Theme</string>
     <string name="tab_mods">Mods</string>
     <string name="tab_settings">Impostazioni</string>
+    <string name="tab_search">Cerca</string>
+    <string name="tab_dst_short">Obsidian</string>
 
     <!-- Home nav menu -->
     <string name="nav_dst_colors">Obsidian Theme</string>
@@ -305,13 +309,19 @@
     <string name="show_advanced_reboot_title">Riavvio Avanzato</string>
     <string name="show_advanced_reboot_summary">Aggiungi opzioni di riavvio avanzate al menu di accensione</string>
     <string name="use_auth_for_advanced_reboot_title">Usa Autenticazione</string>
-    <string name="use_auth_for_advanced_reboot_summary">Richiede autenticazione per utilizzare le opzioni avanzate di riavvio</string>
+    <string name="use_auth_for_advanced_reboot_summary">Richiede autenticazione per riavviare o spegnere, incluso il pillolone stock</string>
     <string name="advanced_reboot_y_offset_title">Offset Verticale</string>
+    <string name="advanced_reboot_color_title">Colore Pulsante</string>
     <string name="advanced_reboot_y_offset_summary">Sposta più in basso il pulsante di riavvio avanzato</string>
     <string name="advanced_reboot_title">Riavvio Avanzato</string>
     <string name="advanced_reboot_auth">Autenticazione Riavvio Avanzato</string>
     <string name="advanced_reboot_auth_summary">Autenticarsi per mostrare le opzioni di riavvio avanzato</string>
     <string name="advanced_reboot_auth_failed">Autenticazione fallita</string>
+    <string name="power_menu_gradient_color_title">Colore Riavvia/Spegni</string>
+    <string name="power_menu_bg_color_title">Sfondo Pillolone</string>
+    <string name="power_menu_border_title">Bordo Pillolone</string>
+    <string name="power_menu_border_summary">Disegna un bordo attorno al cursore riavvia/spegni</string>
+    <string name="power_menu_border_color_title">Colore Bordo</string>
     <string name="advanced_reboot_recovery">Recovery</string>
     <string name="advanced_reboot_bootloader">Bootloader</string>
     <string name="advanced_reboot_safe_mode">Modalità provvisoria</string>
@@ -706,6 +716,9 @@
     <string name="settings_language_summary">Sistema</string>
 
     <string name="settings_layout_section">Disposizione</string>
+    <string name="settings_debug_section">Debug</string>
+    <string name="more_logging_title">Log aggiuntivi</string>
+    <string name="more_logging_summary">Abilita log aggiuntivi.\nQuesto può aiutare quando si inviano Bug Report.</string>
     <string name="settings_default_tab_title">Seleziona la scheda predefinita</string>
 
     <string name="settings_check_updates">Controlla aggiornamenti</string>
