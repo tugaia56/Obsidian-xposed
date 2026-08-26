@@ -1,0 +1,130 @@
+package it.tugaia56.obsidian.xposed.utils;
+
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+/**
+ * Tag-based view manipulation helpers for custom clock layouts (e.g. lockscreen_clock_0.xml) —
+ * trimmed port of OC's ViewHelper: only the subset actually used to apply colour/font/scale/
+ * margin choices onto a tagged layout at hook time.
+ */
+public class ViewHelper {
+
+    private ViewHelper() {}
+
+    public static int dp2px(Context context, int dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
+    }
+
+    public static void setMargins(View view, Context context, int left, int top, int right, int bottom) {
+        ViewGroup.LayoutParams params = view.getLayoutParams();
+        if (params instanceof LinearLayout.LayoutParams lp) {
+            lp.setMargins(dp2px(context, left), dp2px(context, top), dp2px(context, right), dp2px(context, bottom));
+        } else if (params instanceof FrameLayout.LayoutParams lp) {
+            lp.setMargins(dp2px(context, left), dp2px(context, top), dp2px(context, right), dp2px(context, bottom));
+        } else if (params instanceof ViewGroup.MarginLayoutParams lp) {
+            lp.setMargins(dp2px(context, left), dp2px(context, top), dp2px(context, right), dp2px(context, bottom));
+        }
+        view.setLayoutParams(params);
+    }
+
+    public static View findViewWithTag(View view, String tag) {
+        if (view == null) return null;
+        if (view instanceof ViewGroup viewGroup) {
+            if (viewGroup.getTag() != null && viewGroup.getTag().toString().contains(tag)) return viewGroup;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                View result = findViewWithTag(viewGroup.getChildAt(i), tag);
+                if (result != null) return result;
+            }
+        } else if (view.getTag() != null && view.getTag().toString().contains(tag)) {
+            return view;
+        }
+        return null;
+    }
+
+    /** Recursively re-colours every descendant whose tag contains {@code tagContains}. */
+    public static void findViewWithTagAndChangeColor(View view, String tagContains, int color) {
+        if (view == null) return;
+        checkTagAndChangeColor(view, tagContains, color);
+        if (view instanceof ViewGroup viewGroup) {
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                findViewWithTagAndChangeColor(viewGroup.getChildAt(i), tagContains, color);
+            }
+        }
+    }
+
+    private static void checkTagAndChangeColor(View view, String tagContains, int color) {
+        Object tag = view.getTag();
+        if (tag == null || !tag.toString().toLowerCase().contains(tagContains)) return;
+        changeViewColor(view, color);
+    }
+
+    private static void changeViewColor(View view, int color) {
+        if (view instanceof TextView textView) {
+            textView.setTextColor(color);
+            for (Drawable d : textView.getCompoundDrawablesRelative()) {
+                if (d == null) continue;
+                d.mutate();
+                d.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+            }
+        } else if (view instanceof ImageView imageView) {
+            imageView.setColorFilter(color);
+        } else if (view instanceof ProgressBar progressBar) {
+            progressBar.setProgressTintList(ColorStateList.valueOf(color));
+            progressBar.setProgressBackgroundTintList(ColorStateList.valueOf(color));
+        } else if (view instanceof ViewGroup viewGroup) {
+            viewGroup.setBackgroundTintList(ColorStateList.valueOf(color));
+        } else if (view.getBackground() != null) {
+            view.getBackground().mutate().setTint(color);
+        }
+    }
+
+    public static void applyFontRecursively(ViewGroup viewGroup, Typeface typeface) {
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            if (child instanceof ViewGroup childGroup) applyFontRecursively(childGroup, typeface);
+            else if (child instanceof TextView textView) textView.setTypeface(typeface);
+        }
+    }
+
+    /** Adds {@code topMarginDp} (converted to px) on top of every descendant TextView's existing top margin. */
+    public static void applyTextMarginRecursively(Context context, ViewGroup viewGroup, int topMarginDp) {
+        int topMarginPx = dp2px(context, topMarginDp);
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            if (child instanceof ViewGroup childGroup) {
+                applyTextMarginRecursively(context, childGroup, topMarginDp);
+            } else if (child instanceof TextView) {
+                ViewGroup.LayoutParams params = child.getLayoutParams();
+                if (params instanceof LinearLayout.LayoutParams lp) lp.topMargin += topMarginPx;
+                else if (params instanceof FrameLayout.LayoutParams lp) lp.topMargin += topMarginPx;
+                else if (params instanceof RelativeLayout.LayoutParams lp) lp.topMargin += topMarginPx;
+                child.setLayoutParams(params);
+            }
+        }
+    }
+
+    public static void applyTextScalingRecursively(ViewGroup viewGroup, float scaleFactor) {
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            if (child instanceof ViewGroup childGroup) {
+                applyTextScalingRecursively(childGroup, scaleFactor);
+            } else if (child instanceof TextView textView) {
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textView.getTextSize() * scaleFactor);
+            }
+        }
+    }
+}

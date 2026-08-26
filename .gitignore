@@ -12,6 +12,7 @@ local.properties
 
 # IDE and build caches
 .gradle/
+.kotlin/
 .idea/workspace.xml
 .idea/caches/
 .idea/assetWizardSettings.xml
@@ -20,3 +21,9 @@ local.properties
 .idea/migrations.xml
 .idea/AndroidProjectSystem.xml
 .idea/runConfigurations.xml
+
+# Device logcat dumps captured while debugging — may contain personal device/usage data
+logs/
+
+# Stray empty file, not meaningful content
+/adb

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stile 0 — "Nessuno": reale porting di OC preview_header_clock_0.xml (layout vuoto,
+     disabilita l'orologio personalizzato e lascia visibile quello stock). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />

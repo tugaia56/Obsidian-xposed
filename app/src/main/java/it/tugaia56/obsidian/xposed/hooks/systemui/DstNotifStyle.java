@@ -1,0 +1,576 @@
+package it.tugaia56.obsidian.xposed.hooks.systemui;
+
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
+import android.view.Gravity;
+
+import android.content.res.XResources;
+
+import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.callbacks.XC_InitPackageResources;
+
+/**
+ * Xposed hook: replaces SystemUI notification background drawables with one of
+ * 28 DST Notification Style presets — i 10 originali (4 trasparenti reali OC NFN23-26
+ * + 6 altri) più 18 nuovi ispirati agli stili reali OC NFN2-21 mancanti (struttura
+ * semplificata dove OC usa layer XML compilati, ma stessa varietà visiva).
+ *
+ * All drawables are programmatic (GradientDrawable) — no XModuleResources.
+ * Background color comes from OBS sBg, accent from sAccent.
+ * Corner radius comes from DST_NOTIF_CORNER (int, dp; default 24).
+ *
+ * Targets: com.android.systemui
+ * Resources replaced: notification_material_bg, notification_material_bg_monet
+ *
+ * Preset codes (DST_PRESET_NOTIF):
+ *   DSTNFNTOT – Thin Outline Transparent   (transparent bg + 1dp accent stroke)
+ *   DSTNFNO25 – Outline Transparent 25%    (#40000000 bg + 2dp accent stroke)
+ *   DSTNFNO50 – Outline Transparent 50%    (#80000000 bg + 2dp accent stroke)
+ *   DSTNFNO75 – Outline Transparent 75%    (#BF000000 bg + 2dp accent stroke)
+ *   DSTNFNOAC – Outline Accent             (transparent bg + 2dp accent stroke)
+ *   DSTNFNST  – Semi Transparent           (sBg at 50% alpha)
+ *   DSTNFNTR  – Transparent               (fully transparent)
+ *   DSTNFNPB  – Pitch Black               (#FF000000)
+ *   DSTNFNMN  – Monet                     (sBg solid fill)
+ *   DSTNFNAS  – Accent Solid              (sAccent solid fill)
+ *   DSTNFNLYR – Layers                    (bg scuro esterno + bg inserto interno 4dp)
+ *   DSTNFNTO2 – Thin Outline              (bg pieno + bordo accent 2dp)
+ *   DSTNFNBTM – Bottom Outline            (accent + bg inset solo dal basso)
+ *   DSTNFNNM1 – Neumorph                  (gradiente verticale bg → bg scurito)
+ *   DSTNFNSTK – Stack                     (accent + bg inset solo dall'alto, effetto scalino)
+ *   DSTNFNSS  – Side Stack                (accent e bg sfalsati in diagonale)
+ *   DSTNFNOL4 – Outline Spesso            (bg pieno + bordo accent 4dp)
+ *   DSTNFNLT1 – Lighty                    (anello vetro chiaro su base nera 25% trasparente)
+ *   DSTNFNLT2 – Lighty v2                 (anello vetro chiaro su base nera 50% trasparente)
+ *   DSTNFNLT3 – Lighty v3                 (anello vetro chiaro su base gradiente nero 25%→50%)
+ *   DSTNFNNM2 – Neumorph Outline          (anello grigio spesso su base accent)
+ *   DSTNFNCP1 – Cyberponk                 (bg + due barrette accent agli angoli opposti)
+ *   DSTNFNCP2 – Cyberponk v2              (accent + due pannelli bg sfalsati)
+ *   DSTNFNTL  – Thread Line               (bg + sottile linea accent centrata)
+ *   DSTNFNFD  – Faded                     (gradiente verticale bg → trasparente)
+ *   DSTNFNDB  – Dumbbell                  (gradiente orizzontale accent-bg-accent)
+ *   DSTNFNDL  – Duoline                   (gradiente verticale accent-bg-accent)
+ *   DSTNFNIOS – iOS                       (gradiente verticale bg chiarito → bg)
+ */
+public class DstNotifStyle {
+
+    private static final String PKG_SYSTEMUI = "com.android.systemui";
+    private static final String PREF_PRESET  = "DST_PRESET_NOTIF";
+    private static final String PREF_ACCENT1 = "DST_ACCENT1";
+    private static final String PREF_BG      = "DST_BACKGROUND";
+    private static final String PREF_CORNER  = "DST_NOTIF_CORNER";
+    private static final String PREFS_FILE   =
+        "/data/user_de/0/it.tugaia56.obsidian/shared_prefs/it.tugaia56.obsidian_preferences.xml";
+
+    private static final int DEFAULT_CORNER_DP = 24;
+
+    private static final String[] NOTIF_DRAWABLES = {
+        "notification_material_bg",
+        "notification_material_bg_monet", // usata quando i colori dinamici (Monet) sono
+                                           // attivi — di norma sempre, di default, su OOS.
+                                           // Senza questa la sostituzione non viene mai
+                                           // caricata e non ha alcun effetto visibile.
+        "notification_bg_normal_color",
+        "notification_row_appear_bg",
+        "notif_background",
+    };
+
+    private static volatile String sPreset    = null;
+
+    /** Called by DstNotifStyleMod to check if a preset is active. */
+    public static boolean isEnabled() { return sPreset != null; }
+    private static volatile int    sAccent    = 0xFF9C27B0;
+    private static volatile int    sBg        = 0xFF1B2029;
+    private static volatile int    sCornerDp  = DEFAULT_CORNER_DP;
+
+    // ── Boot-time preload ────────────────────────────────────────────────────
+
+    public static void preloadFromFile() {
+        try {
+            java.io.File f = new java.io.File(PREFS_FILE);
+            if (!f.exists()) { preloadFromProps(); return; }
+            java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(f));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) sb.append(line);
+            br.close();
+            String xml = sb.toString();
+
+            sPreset   = parseStringContent(xml, PREF_PRESET);
+            sAccent   = parseInt(parseAttr(xml, PREF_ACCENT1, "value"), 0xFF9C27B0);
+            sBg       = parseInt(parseAttr(xml, PREF_BG,      "value"), 0xFF1B2029);
+            int corner = parseInt(parseAttr(xml, PREF_CORNER, "value"), DEFAULT_CORNER_DP);
+            sCornerDp = (corner > 0) ? corner : DEFAULT_CORNER_DP;
+            XposedBridge.log("[ Obsidian ] DstNotifStyle.preload(file): preset=" + sPreset
+                    + " corner=" + sCornerDp);
+        } catch (Throwable t) {
+            XposedBridge.log("[ Obsidian ] DstNotifStyle.preload(file) ERROR: " + t + " — trying props");
+            preloadFromProps();
+        }
+    }
+
+    private static void preloadFromProps() {
+        try {
+            Class<?> sp    = XposedHelpers.findClass("android.os.SystemProperties", null);
+            String preset  = (String) XposedHelpers.callStaticMethod(sp, "get", "persist.obsidian.dst.notif_preset", "");
+            String a1Str   = (String) XposedHelpers.callStaticMethod(sp, "get", "persist.obsidian.dst.a1",           "");
+            String bgStr   = (String) XposedHelpers.callStaticMethod(sp, "get", "persist.obsidian.dst.bg",            "");
+            String cornStr = (String) XposedHelpers.callStaticMethod(sp, "get", "persist.obsidian.dst.notif_corner",  "24");
+            XposedBridge.log("[ Obsidian ] DstNotifStyle.preloadFromProps: preset='" + preset + "'");
+            if (preset.isEmpty()) return;
+            sPreset = preset;
+            if (!a1Str.isEmpty())   { try { sAccent   = Integer.parseInt(a1Str);   } catch (NumberFormatException ignored) {} }
+            if (!bgStr.isEmpty())   { try { sBg       = Integer.parseInt(bgStr);    } catch (NumberFormatException ignored) {} }
+            if (!cornStr.isEmpty()) {
+                try {
+                    int c = Integer.parseInt(cornStr);
+                    sCornerDp = (c > 0) ? c : DEFAULT_CORNER_DP;
+                } catch (NumberFormatException ignored) {}
+            }
+            XposedBridge.log("[ Obsidian ] DstNotifStyle.preload(props): preset=" + sPreset
+                    + " corner=" + sCornerDp);
+        } catch (Throwable t) {
+            XposedBridge.log("[ Obsidian ] DstNotifStyle.preload(props) ERROR: " + t);
+        }
+    }
+
+    /**
+     * Rilegge i prefs da disco e costruisce il drawable per il preset attivo — usato dal
+     * hook diretto su NotificationBackgroundView.setCustomBackground() (vedi DstNotifBgView),
+     * il vero punto in cui OOS applica lo sfondo notifica su questa build (non passa per
+     * risorse XML sostituibili via XResources — vedi diagnostica DIAG getDrawable).
+     * Ritorna null se nessun preset è attivo (nessuna modifica da applicare).
+     */
+    public static Drawable currentDrawable(float density, boolean isNight) {
+        // Con sistema in tema chiaro lasciamo la card notifica stock di OOS (che già la
+        // gestisce correttamente in chiaro) invece di applicare un preset pensato/testato solo
+        // per lo shade scuro — evita di dover indovinare colori "giusti" per ogni preset in
+        // chiaro, e chi tiene il sistema scuro non vede alcun cambiamento.
+        if (!isNight) return null;
+        preloadFromFile();
+        if (sPreset == null) return null;
+        if (density <= 0f) density = 3.0f;
+        return buildNotifBg(sPreset, sAccent, sBg, density, sCornerDp);
+    }
+
+    // ── Called from ResourceManager.handleInitPackageResources ───────────────
+
+    public static void applyPreloaded(XC_InitPackageResources.InitPackageResourcesParam rp) {
+        if (!PKG_SYSTEMUI.equals(rp.packageName)) return;
+        XposedBridge.log("[ Obsidian ] DstNotifStyle.applyPreloaded: CALLED for systemui");
+        preloadFromFile();
+        XposedBridge.log("[ Obsidian ] DstNotifStyle.applyPreloaded: after preload preset=" + sPreset);
+        if (sPreset == null) return;
+
+        // Non catturare preset/accent/bg/cornerDp come "final" qui: newDrawable() viene
+        // richiamato dal sistema ad ogni redraw/aggiornamento notifica, anche molto tempo
+        // dopo che l'utente ha cambiato preset nell'app — senza un riavvio di SystemUI la
+        // closure resterebbe con i valori "congelati" al primo avvio del processo, mostrando
+        // sempre il vecchio preset. Rileggiamo da disco ad ogni chiamata così il preset
+        // attivo è sempre quello corrente, senza bisogno di riavviare SystemUI.
+        XResources.DrawableLoader loader = new XResources.DrawableLoader() {
+            @Override
+            public Drawable newDrawable(XResources res, int id) {
+                boolean isNight = (res.getConfiguration().uiMode
+                        & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                        == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+                if (!isNight) return null; // sistema in chiaro: card stock di OOS
+                preloadFromFile();
+                String preset   = sPreset;
+                int    accent   = sAccent;
+                int    bg       = sBg;
+                int    cornerDp = sCornerDp;
+                if (preset == null) return new GradientDrawable();
+                float density = res.getDisplayMetrics().density;
+                if (density <= 0f) density = 3.0f;
+                return buildNotifBg(preset, accent, bg, density, cornerDp);
+            }
+        };
+
+        for (String drawableName : NOTIF_DRAWABLES) {
+            try {
+                rp.res.setReplacement(PKG_SYSTEMUI, "drawable", drawableName, loader);
+            } catch (Throwable t) {
+                XposedBridge.log("[ Obsidian ] DstNotifStyle: error replacing " + drawableName + ": " + t);
+            }
+        }
+    }
+
+    // ── Drawable factory ──────────────────────────────────────────────────────
+
+    /** Public so the UI (preset preview picker) can render the exact same drawable used at runtime. */
+    public static Drawable buildNotifBg(String preset, int accent, int bg,
+                                          float density, int cornerDp) {
+        Drawable d = buildNotifBgRaw(preset, accent, bg, density, cornerDp);
+        if (d == null) return null;
+        // NotificationBackgroundView.setCustomBackground() -> setTint() -> getStatefulBackgroundLayer()
+        // reads layer index 1 of whatever LayerDrawable it's given. A bare GradientDrawable (or
+        // fewer than 2 layers) throws IndexOutOfBoundsException there and crashes SystemUI
+        // (confirmed on-device: crashed on every boot, on the always-inflated NotificationShelf,
+        // putting LSPosed into safe mode) — every case below now guarantees ≥2 layers.
+        // But it's worse than a crash risk: on real notifications, whatever content actually
+        // SITS at layer index 1 never gets drawn at all, even when no crash occurs (confirmed by
+        // user report across ~15 presets — e.g. Cyberponk's two identical bars, one at index 1,
+        // one at index 2: only the index-2 bar ever shows live, despite both rendering correctly
+        // in the picker's own preview dialog). Every multi-layer case below therefore keeps
+        // index 1 an inert transparent guard (indexOneGuard()) and puts all real content at
+        // index 0 or index ≥2. This wrapper only still needs to handle the plain
+        // single-GradientDrawable presets (gradients with no distinct layers).
+        if (d instanceof LayerDrawable) return d;
+        Drawable filler = buildNotifBgRaw(preset, accent, bg, density, cornerDp);
+        return tintBlockedLayer(new Drawable[]{filler != null ? filler : d, indexOneGuard(cornerDp * density), d});
+    }
+
+    private static Drawable buildNotifBgRaw(String preset, int accent, int bg,
+                                          float density, int cornerDp) {
+        float r = cornerDp * density;
+
+        switch (preset) {
+            case "DSTNFNTOT": // Thin Outline Transparent
+                return shape(Color.TRANSPARENT, accent, Math.round(1f * density), r);
+
+            case "DSTNFNO25": // "Trasparenza Alta con bordo" (25% opaco = molto trasparente).
+                              // Riempimento nero, non accento — richiesta esplicita dell'utente
+                              // (l'accento tinto rendeva il preset simile ad "Accento Solido").
+                              // Il bordo resta accento per restare distinguibile dal pannello.
+                return shape(withAlpha(Color.BLACK, 0.25f), accent, Math.round(2f * density), r);
+
+            case "DSTNFNO50": // "Trasparenza Media con bordo"
+                return shape(withAlpha(Color.BLACK, 0.50f), accent, Math.round(2f * density), r);
+
+            case "DSTNFNO75": // "Trasparenza Bassa con bordo" (75% opaco = poco trasparente).
+                return shape(withAlpha(Color.BLACK, 0.75f), accent, Math.round(2f * density), r);
+
+            case "DSTNFNOAC": // Outline Accent (black bg, accent stroke)
+                return shape(Color.BLACK, accent, Math.round(2f * density), r);
+
+            case "DSTNFNST": { // Semi Transparent (sBg at 50% alpha)
+                int stColor = (bg & 0x00FFFFFF) | 0x80000000;
+                return shape(stColor, 0, 0, r);
+            }
+
+            case "DSTNFNTR": // Transparent
+                return shape(Color.TRANSPARENT, 0, 0, r);
+
+            case "DSTNFNPB": // Pitch Black
+                return shape(0xFF000000, 0, 0, r);
+
+            case "DSTNFNMN": // Monet (sBg solid)
+                return shape(bg, 0, 0, r);
+
+            case "DSTNFNAS": // Accent Solid
+                return shape(accent, 0, 0, r);
+
+            case "DSTNFNLYR": { // Layers — bg scurito esterno + bg inserto interno 4dp
+                GradientDrawable outer = simpleShape(darken(bg, 0.85f), 0, 0, r);
+                int inset = Math.round(4f * density);
+                GradientDrawable inner = simpleShape(bg, 0, 0, Math.max(0f, r - inset));
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{outer, indexOneGuard(r), inner});
+                layered.setLayerInset(2, inset, inset, inset, inset);
+                return layered;
+            }
+
+            case "DSTNFNTO2": // Thin Outline — bg pieno + bordo accent 2dp
+                return shape(bg, accent, Math.round(2f * density), r);
+
+            case "DSTNFNBTM": { // Bottom Outline — accent, bg inset solo dal basso
+                GradientDrawable outer = simpleShape(accent, 0, 0, r);
+                int inset = Math.round(4f * density);
+                GradientDrawable inner = simpleShape(bg, 0, 0, r);
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{outer, indexOneGuard(r), inner});
+                layered.setLayerInset(2, 0, 0, 0, inset);
+                return layered;
+            }
+
+            case "DSTNFNNM1": // Neumorph — gradiente verticale bg → bg scurito
+                return gradient(GradientDrawable.Orientation.TOP_BOTTOM,
+                        new int[]{bg, darken(bg, 0.85f)}, r);
+
+            case "DSTNFNSTK": { // Stack — accent, bg inset solo dall'alto (scalino)
+                GradientDrawable outer = simpleShape(accent, 0, 0, r);
+                int inset = Math.round(8f * density);
+                GradientDrawable inner = simpleShape(bg, 0, 0, r);
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{outer, indexOneGuard(r), inner});
+                layered.setLayerInset(2, 0, inset, 0, 0);
+                return layered;
+            }
+
+            case "DSTNFNSS": { // Side Stack — accent e bg sfalsati in diagonale
+                int inset = Math.round(8f * density);
+                GradientDrawable back = simpleShape(accent, 0, 0, r);
+                GradientDrawable front = simpleShape(bg, 0, 0, r);
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{back, indexOneGuard(r), front});
+                layered.setLayerInset(0, 0, 0, inset, inset);
+                layered.setLayerInset(2, inset, inset, 0, 0);
+                return layered;
+            }
+
+            case "DSTNFNOL4": // Outline Spesso — bg pieno + bordo accent 4dp
+                return shape(bg, accent, Math.round(4f * density), r);
+
+            case "DSTNFNLT1": // Lighty — anello vetro chiaro su base nera trasparente (25%,
+                              // come Trasparenza Alta con bordo — richiesta utente, via l'accento)
+                return gradientRing(new int[]{0x99FFFFFF, 0xB3FFFFFF},
+                        GradientDrawable.Orientation.TL_BR, Math.round(2f * density),
+                        withAlpha(Color.BLACK, 0.25f), r);
+
+            case "DSTNFNLT2": // Lighty v2 — anello vetro chiaro su base nera trasparente (50%,
+                              // come Trasparenza Media con bordo — richiesta utente, via l'accento)
+                return gradientRing(new int[]{0xB3FFFFFF, 0xCCFFFFFF},
+                        GradientDrawable.Orientation.TL_BR, Math.round(2f * density),
+                        withAlpha(Color.BLACK, 0.50f), r);
+
+            case "DSTNFNLT3": { // Lighty v3 — anello vetro chiaro, base gradiente nero 25%→50%
+                int ringWidth = Math.round(2f * density);
+                GradientDrawable outer = gradient(GradientDrawable.Orientation.TL_BR,
+                        new int[]{0xB3FFFFFF, 0xCCFFFFFF}, r);
+                float innerRadius = Math.max(0f, r - ringWidth);
+                GradientDrawable inner = gradient(GradientDrawable.Orientation.TL_BR,
+                        new int[]{withAlpha(Color.BLACK, 0.25f), withAlpha(Color.BLACK, 0.50f)}, innerRadius);
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{outer, indexOneGuard(r), inner});
+                layered.setLayerInset(2, ringWidth, ringWidth, ringWidth, ringWidth);
+                return layered;
+            }
+
+            case "DSTNFNNM2": // Neumorph Outline v2 — come Duoline (accent-bg-accent) ma radiale,
+                              // raggio piccolo (60dp) per anelli concentrati invece di sfumati
+                return radialGradient(new int[]{accent, bg, accent}, r, density * 0.6f);
+
+            case "DSTNFNCP1": { // Cyberponk — bg + due barrette accent agli angoli opposti
+                GradientDrawable base = simpleShape(bg, 0, 0, r);
+                GradientDrawable bar1 = simpleShape(accent, 0, 0, Math.round(1f * density));
+                GradientDrawable bar2 = simpleShape(accent, 0, 0, Math.round(1f * density));
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{base, indexOneGuard(r), bar1, bar2});
+                int barW = Math.round(84f * density), barH = Math.round(3f * density);
+                // Entrambe sul lato destro (alto e basso): a sinistra ci sono sempre icona app
+                // + titolo, che le coprirebbero comunque — a destra c'è solo il timestamp/
+                // chevron in alto e spazio libero in basso.
+                int barInset = Math.round(6f * density);
+                layered.setLayerSize(2, barW, barH);
+                layered.setLayerGravity(2, Gravity.TOP | Gravity.END);
+                layered.setLayerInset(2, 0, barInset, barInset, 0);
+                layered.setLayerSize(3, barW, barH);
+                layered.setLayerGravity(3, Gravity.BOTTOM | Gravity.END);
+                layered.setLayerInset(3, 0, 0, barInset, barInset);
+                return layered;
+            }
+
+            case "DSTNFNCP2": { // Cyberponk v2 — accent + due pannelli bg sfalsati
+                // insetBig segna dove finisce il pannello sinistro/inizia quello destro —
+                // tenuto appena oltre la larghezza tipica di icona+padding (~52dp) così il
+                // bordo sfalsato cade subito dopo l'icona (che ha il suo sfondo opaco, non le
+                // serve il bg del pannello) invece che a metà del testo.
+                int insetSmall = Math.round(3f * density), insetBig = Math.round(52f * density);
+                GradientDrawable base = simpleShape(accent, 0, 0, r);
+                GradientDrawable panel1 = simpleShape(bg, 0, 0, r);
+                GradientDrawable panel2 = simpleShape(bg, 0, 0, r);
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{base, indexOneGuard(r), panel1, panel2});
+                layered.setLayerInset(2, 0, insetSmall, insetBig, insetSmall);
+                layered.setLayerInset(3, insetBig, insetSmall, 0, insetSmall);
+                return layered;
+            }
+
+            case "DSTNFNTL": { // Thread Line — bg + sottile linea accent centrata
+                GradientDrawable base = simpleShape(bg, 0, 0, r);
+                GradientDrawable line = simpleShape(accent, 0, 0, Math.round(2f * density));
+                LayerDrawable layered = tintBlockedLayer(new Drawable[]{base, indexOneGuard(r), line});
+                layered.setLayerSize(2, Math.round(200f * density), Math.round(4f * density));
+                layered.setLayerGravity(2, Gravity.CENTER);
+                return layered;
+            }
+
+            case "DSTNFNFD": // Faded — gradiente verticale bg → trasparente
+                return gradient(GradientDrawable.Orientation.TOP_BOTTOM,
+                        new int[]{bg, Color.TRANSPARENT}, r);
+
+            case "DSTNFNDB": // Dumbbell — gradiente orizzontale accent-bg-accent
+                return gradient(GradientDrawable.Orientation.LEFT_RIGHT,
+                        new int[]{accent, bg, accent}, r);
+
+            case "DSTNFNDL": // Duoline — gradiente verticale accent-bg-accent
+                return gradient(GradientDrawable.Orientation.TOP_BOTTOM,
+                        new int[]{accent, bg, accent}, r);
+
+            case "DSTNFNIOS": // iOS — prima era bg chiarito → bg, troppo simile a Neumorph.
+                              // Un bianco quasi pieno (primo tentativo) rendeva illeggibile il
+                              // testo bianco di OOS — grigio medio: resta chiaro/diverso da
+                              // tutti gli altri preset (scuri) ma abbastanza scuro da leggere.
+                return gradient(GradientDrawable.Orientation.TOP_BOTTOM,
+                        new int[]{0xF2888888, 0xF2707070}, r);
+
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Costruisce lo sfondo notifica: un solo GradientDrawable con solid+stroke insieme (come il
+     * vero popup_background_material.xml di OC — <shape> con <solid> e <stroke> sullo stesso
+     * layer, non un <layer-list>). La vecchia versione separava bordo e riempimento in due
+     * GradientDrawable dentro un LayerDrawable per evitare un presunto scarto di curvatura a
+     * raggi piccoli — ma un LayerDrawable è esattamente la struttura per cui oggi abbiamo
+     * scoperto che OOS non disegna mai il contenuto reale del layer indice 1 dal vivo. Un
+     * GradientDrawable singolo con solid+stroke evita il problema alla radice, oltre a
+     * combaciare con l'unico riferimento OC (type3_OxygenOS_16/popup_background_material.xml)
+     * di come OOS si aspetta che siano fatti questi sfondi.
+     */
+    private static Drawable shape(int fill, int strokeColor, int strokeWidth, float cornerRadius) {
+        return simpleShape(fill, strokeColor, strokeWidth, cornerRadius);
+    }
+
+    /** Layer trasparente pieno che occupa SOLO l'indice 1 di un LayerDrawable. Confermato su
+     *  device reale: qualunque contenuto visivo messo all'indice 1 (sia con setLayerInset che
+     *  con setLayerSize+setLayerGravity) non viene mai disegnato dal vivo da OOS — nel dialog
+     *  di anteprima (che non passa dal vero NotificationBackgroundView) invece sì, quindi il
+     *  bug non è nel drawable costruito ma in come OOS rielabora quello specifico layer.
+     *  Indice 0 e indice 2+ funzionano sempre: ogni preset multi-layer tiene qui un layer
+     *  vuoto all'indice 1 e sposta il contenuto vero altrove. */
+    private static GradientDrawable indexOneGuard(float cornerRadius) {
+        return simpleShape(Color.TRANSPARENT, 0, 0, cornerRadius);
+    }
+
+    /** GradientDrawable che blocca il setTint/setColorFilter di OOS — OOS applica un tint di
+     *  sistema sul drawable dopo averlo caricato, bloccandolo il nostro colore resta quello
+     *  scelto dall'utente. */
+    private static GradientDrawable simpleShape(int fill, int strokeColor, int strokeWidth,
+                                                 float cornerRadius) {
+        GradientDrawable d = new GradientDrawable() {
+            @Override public void setTint(int tintColor) { /* block OOS tint */ }
+            @Override public void setTintList(ColorStateList tint) { /* block OOS tint */ }
+            @Override public void setTintMode(PorterDuff.Mode tintMode) { /* block */ }
+            @Override public void setColorFilter(ColorFilter cf) { /* block OOS colorFilter */ }
+            @Override public void setColorFilter(int color, PorterDuff.Mode mode) { /* block */ }
+            // OOS chiama setAlpha() come parte della sua animazione/gestione stato notifica,
+            // sovrascrivendo il canale alpha del colore scelto (un preset al 25% finiva
+            // renderizzato quasi a piena opacità, confermato su device con lettura pixel reale).
+            @Override public void setAlpha(int alpha) { /* block OOS alpha override */ }
+        };
+        d.setShape(GradientDrawable.RECTANGLE);
+        d.setColor(fill);
+        d.setCornerRadius(cornerRadius);
+        if (strokeWidth > 0) d.setStroke(strokeWidth, strokeColor);
+        return d;
+    }
+
+    /** LayerDrawable che blocca il setTint/setColorFilter di OOS — senza questo, anche se i
+     *  singoli layer sono protetti, OOS può tintare/filtrare il wrapper stesso una volta
+     *  caricato, sovrascrivendo l'aspetto scelto dall'utente. */
+    private static LayerDrawable tintBlockedLayer(Drawable[] layers) {
+        return new LayerDrawable(layers) {
+            @Override public void setTint(int tintColor) { /* block OOS tint */ }
+            @Override public void setTintList(ColorStateList tint) { /* block OOS tint */ }
+            @Override public void setTintMode(PorterDuff.Mode tintMode) { /* block */ }
+            @Override public void setColorFilter(ColorFilter cf) { /* block OOS colorFilter */ }
+            @Override public void setColorFilter(int color, PorterDuff.Mode mode) { /* block */ }
+            // OOS chiama setAlpha() come parte della sua animazione/gestione stato notifica,
+            // sovrascrivendo il canale alpha del colore scelto (un preset al 25% finiva
+            // renderizzato quasi a piena opacità, confermato su device con lettura pixel reale).
+            @Override public void setAlpha(int alpha) { /* block OOS alpha override */ }
+        };
+    }
+
+    /** Sfondo a gradiente (2 o più stop) con lo stesso blocco anti-tint di {@link #simpleShape}. */
+    private static GradientDrawable gradient(GradientDrawable.Orientation orientation,
+                                              int[] colors, float cornerRadius) {
+        GradientDrawable d = new GradientDrawable(orientation, colors) {
+            @Override public void setTint(int tintColor) { /* block OOS tint */ }
+            @Override public void setTintList(ColorStateList tint) { /* block OOS tint */ }
+            @Override public void setTintMode(PorterDuff.Mode tintMode) { /* block */ }
+            @Override public void setColorFilter(ColorFilter cf) { /* block OOS colorFilter */ }
+            @Override public void setColorFilter(int color, PorterDuff.Mode mode) { /* block */ }
+            // OOS chiama setAlpha() come parte della sua animazione/gestione stato notifica,
+            // sovrascrivendo il canale alpha del colore scelto (un preset al 25% finiva
+            // renderizzato quasi a piena opacità, confermato su device con lettura pixel reale).
+            @Override public void setAlpha(int alpha) { /* block OOS alpha override */ }
+        };
+        d.setShape(GradientDrawable.RECTANGLE);
+        d.setCornerRadius(cornerRadius);
+        return d;
+    }
+
+    /** Come {@link #gradient}, ma radiale invece che lineare. Il raggio è FISSO (calcolato a
+     *  costruzione, non in {@code onBoundsChange}): quella versione dinamica non scattava mai
+     *  nella pipeline live delle notifiche (confermato — il raggio restava a 0, mostrando solo
+     *  il primo colore/accento in tinta unita), a differenza del dialog di anteprima dove
+     *  invece funzionava. Un raggio fisso, larghezza tipica di una notifica reale, è meno
+     *  preciso ma non dipende da un callback che lì semplicemente non arriva. */
+    private static GradientDrawable radialGradient(int[] colors, float cornerRadius, float density) {
+        GradientDrawable d = new GradientDrawable() {
+            @Override public void setTint(int tintColor) { /* block OOS tint */ }
+            @Override public void setTintList(ColorStateList tint) { /* block OOS tint */ }
+            @Override public void setTintMode(PorterDuff.Mode tintMode) { /* block */ }
+            @Override public void setColorFilter(ColorFilter cf) { /* block OOS colorFilter */ }
+            @Override public void setColorFilter(int color, PorterDuff.Mode mode) { /* block */ }
+        };
+        d.setColors(colors);
+        d.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        d.setGradientRadius(100f * density);
+        d.setShape(GradientDrawable.RECTANGLE);
+        d.setCornerRadius(cornerRadius);
+        return d;
+    }
+
+    /** Anello sfumato: rettangolo esterno con fill a gradiente, contenuto interno più piccolo
+     *  sovrapposto — il gradiente resta visibile solo come bordo di spessore {@code ringWidth}. */
+    private static Drawable gradientRing(int[] ringColors, GradientDrawable.Orientation orientation,
+                                          int ringWidth, int innerFill, float cornerRadius) {
+        GradientDrawable outer = gradient(orientation, ringColors, cornerRadius);
+        float innerRadius = Math.max(0f, cornerRadius - ringWidth);
+        GradientDrawable inner = simpleShape(innerFill, 0, 0, innerRadius);
+        LayerDrawable layered = tintBlockedLayer(new Drawable[]{outer, indexOneGuard(cornerRadius), inner});
+        layered.setLayerInset(2, ringWidth, ringWidth, ringWidth, ringWidth);
+        return layered;
+    }
+
+    private static int withAlpha(int color, float alphaFraction) {
+        int a = Math.round(255 * alphaFraction);
+        return (color & 0x00FFFFFF) | (a << 24);
+    }
+
+    private static int darken(int color, float factor) {
+        return Color.argb(Color.alpha(color),
+                Math.round(Color.red(color) * factor),
+                Math.round(Color.green(color) * factor),
+                Math.round(Color.blue(color) * factor));
+    }
+
+    private static int lighten(int color, float factor) {
+        return Color.argb(Color.alpha(color),
+                Math.min(255, Math.round(Color.red(color) * factor)),
+                Math.min(255, Math.round(Color.green(color) * factor)),
+                Math.min(255, Math.round(Color.blue(color) * factor)));
+    }
+
+    // ── XML parse helpers ─────────────────────────────────────────────────────
+
+    private static int parseInt(String s, int def) {
+        if (s == null) return def;
+        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return def; }
+    }
+
+    private static String parseAttr(String xml, String name, String attr) {
+        int idx = xml.indexOf("name=\"" + name + "\"");
+        if (idx < 0) return null;
+        String key = attr + "=\"";
+        int s = xml.indexOf(key, idx);
+        if (s < 0) return null;
+        s += key.length();
+        int e = xml.indexOf("\"", s);
+        return e < 0 ? null : xml.substring(s, e);
+    }
+
+    private static String parseStringContent(String xml, String name) {
+        String needle = "name=\"" + name + "\">";
+        int idx = xml.indexOf(needle);
+        if (idx < 0) return null;
+        int s = idx + needle.length();
+        int e = xml.indexOf("<", s);
+        return e <= s ? null : xml.substring(s, e).trim();
+    }
+}

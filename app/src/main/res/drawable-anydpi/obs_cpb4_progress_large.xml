@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CPB4 progress_large_material replacement.
+     Layer 0 = outer, layer 1 = inner.
+     Tint is applied at runtime in DstCpbStyle.replaceProgress(). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <rotate
+            android:drawable="@drawable/obs_cpb4_s76_outer"
+            android:pivotX="50%"
+            android:pivotY="50%"
+            android:fromDegrees="0"
+            android:toDegrees="1080" />
+    </item>
+    <item>
+        <rotate
+            android:drawable="@drawable/obs_cpb4_s76_inner"
+            android:pivotX="50%"
+            android:pivotY="50%"
+            android:fromDegrees="720"
+            android:toDegrees="0" />
+    </item>
+</layer-list>

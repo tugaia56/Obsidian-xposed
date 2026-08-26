@@ -1,0 +1,80 @@
+name: Make Release
+
+on:
+  push:
+    tags: 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Source Code Download
+        run: git clone --branch master --single-branch --recurse-submodules https://github.com/tugaia56/Obsidian-xposed.git .
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4.1.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Shell Scripts Permissions
+        run: chmod +x .github/*.sh
+
+      - name: Version Bump
+        run: .github/bumpVersion.sh
+
+      - name: Gradlew Permissions
+        run: chmod +x gradlew
+
+      - name: Signature files preparation
+        run: |
+          if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
+            echo storePassword=${{ secrets.KEYSTORE_PASSWORD }} >> keystore.properties
+            echo keyAlias=${{ secrets.KEY_ALIAS }} >> keystore.properties
+            echo keyPassword=${{ secrets.KEY_PASSWORD }} >> keystore.properties
+            echo storeFile=${{ github.workspace }}/key.jks >> keystore.properties
+            echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
+          fi
+
+      - name: Gradle Build
+        run: ./gradlew assembleRelease
+
+      - name: Upload Artifact to Actions
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: "Obsidian_${{ env.VTag }}"
+          path: app/build/outputs/apk/release/Obsidian-release.apk
+
+      - name: Version Bump Commit
+        uses: github-actions-x/commit@v2.9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'master'
+          commit-message: 'Version update: Release'
+          force-add: 'true'
+          files: app/build.gradle.kts
+          name: GitHub
+          email: obsidian@tugaia.it
+
+      - name: Obsidian Binary Release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          tag: ${{ env.VTag }}
+          name: ${{ env.VName }}
+          body: ${{ env.VName }} released!
+          prerelease: false
+          allowUpdates: false
+          draft: false
+          artifacts: 'app/build/outputs/apk/release/Obsidian-release.apk'
+
+      - name: Telegram Group Post
+        if: ${{ !cancelled() && vars.HAS_TELEGRAM_SECRETS == 'true' }}
+        run: |
+          curl -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"chat_id": ${{ secrets.OBSIDIAN_GROUP }}, "text": "'"$(cat telegram.msg)"'", "parse_mode": "Markdown", "reply_markup": {"inline_keyboard": [[{"text":"Download", "url": "https://www.github.com/tugaia56/Obsidian-xposed/releases/download/${{ env.VTag }}/Obsidian-release.apk"}]]}' https://api.telegram.org/bot${{ secrets.TELEGRAM_TK }}/sendMessage

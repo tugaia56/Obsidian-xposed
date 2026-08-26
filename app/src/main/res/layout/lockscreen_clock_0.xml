@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Stile 21" — real port of OC's preview_lockscreen_clock_21.xml. Tags (accent1/text1/...)
+     are read by ViewHelper at hook time to apply the user's chosen colours/font/scale. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="start|top"
+    android:gravity="start|top"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="10dp"
+        android:layout_marginStart="-20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Placeholder — the real LottieAnimationView is built in Java at hook time
+             (LockscreenClockMod) and dropped in here. Declaring the Lottie view directly
+             in XML fails to inflate cross-process via Xposed (classloader mismatch), same
+             reason OC builds it programmatically instead of from XML. -->
+        <FrameLayout
+            android:id="@+id/clock21_lottie"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:tag="lottie" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-20dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:orientation="horizontal">
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/bebasneue_bold"
+                    android:format12Hour="hh"
+                    android:format24Hour="HH"
+                    android:maxLength="2"
+                    android:singleLine="true"
+                    android:tag="accent1"
+                    android:textColor="@android:color/system_accent1_300"
+                    android:textSize="60dp" />
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="@font/bebasneue_bold"
+                    android:format12Hour="mm"
+                    android:format24Hour="mm"
+                    android:singleLine="true"
+                    android:tag="text1"
+                    android:textColor="@android:color/white"
+                    android:textSize="44dp" />
+
+            </LinearLayout>
+
+            <TextClock
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="-8dp"
+                android:format12Hour="EEEE"
+                android:format24Hour="EEEE"
+                android:singleLine="true"
+                android:tag="text1|nolineheight"
+                android:textAlignment="viewStart"
+                android:textColor="@android:color/white"
+                android:textSize="28dp" />
+
+            <TextClock
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:format12Hour="MMMM dd"
+                android:format24Hour="dd MMMM"
+                android:singleLine="true"
+                android:tag="text1|textClockDate"
+                android:textAlignment="viewStart"
+                android:textColor="@android:color/white"
+                android:textSize="20dp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

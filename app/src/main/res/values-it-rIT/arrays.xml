@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Sfondo Meteo SdB: 9 stili reali OC (LockscreenWeather.updateWeatherBg) -->
+    <string-array name="lockscreen_weather_bg_entries">
+        <item>Nessuno</item>
+        <item>Box semi-trasparente</item>
+        <item>Box semi-trasparente (arrotondato)</item>
+        <item>Pillola</item>
+        <item>Arrotondato, semplice e con accento</item>
+        <item>Arrotondato, trasparente e con accento</item>
+        <item>Gradiente</item>
+        <item>Scuro con bordi accento</item>
+        <item>Scuro con bordi gradiente</item>
+    </string-array>
+
+    <!-- Orologio Intestazione QS: 8 stili reali OC + Nessuno -->
+    <string-array name="qs_header_clock_style_entries">
+        <item>Nessuno</item>
+        <item>Stile Orologio 1</item>
+        <item>Stile Orologio 2</item>
+        <item>Stile Orologio 3</item>
+        <item>Stile Orologio 4</item>
+        <item>Stile Orologio 5</item>
+        <item>Stile Orologio 6</item>
+        <item>Stile Orologio 7</item>
+        <item>Stile Orologio 8</item>
+    </string-array>
+
+    <!-- DST: Nomi preset Toast (IT) -->
+    <string-array name="dst_toast_preset_names">
+        <item>Solido</item>
+        <item>Bordo Sottile</item>
+        <item>Bordo Spesso</item>
+        <item>Accento Solido</item>
+        <item>Semi Trasparente</item>
+        <item>Accento Sfumato</item>
+        <item>Vetro</item>
+        <item>Grigio</item>
+        <item>Accento Doppio</item>
+        <item>Neutro Trasparente</item>
+        <item>Accento con Velo</item>
+        <item>Pillola Asimmetrica</item>
+    </string-array>
+
+    <!-- DST: Nomi preset Stile Notifica (IT) — 4 trasparenti per primi -->
+    <string-array name="dst_notif_preset_names">
+        <item>Trasparente con bordo sottile</item>
+        <item>Trasparenza Alta con bordo</item>
+        <item>Trasparenza Media con bordo</item>
+        <item>Trasparenza Bassa con bordo</item>
+        <item>Scuro con bordo</item>
+        <item>Semi Trasparente</item>
+        <item>Trasparente</item>
+        <item>Nero Assoluto</item>
+        <item>Monet</item>
+        <item>Accento Solido</item>
+        <item>Livelli</item>
+        <item>Bordo Sottile</item>
+        <item>Bordo Inferiore</item>
+        <item>Neumorph</item>
+        <item>Stack</item>
+        <item>Stack Laterale</item>
+        <item>Bordo Spesso</item>
+        <item>Vetro</item>
+        <item>Vetro v2</item>
+        <item>Vetro v3</item>
+        <item>Neumorph con Bordo</item>
+        <item>Cyberponk</item>
+        <item>Cyberponk v2</item>
+        <item>Linea Sottile</item>
+        <item>Sfumato</item>
+        <item>Manubrio</item>
+        <item>Doppia Linea</item>
+        <item>iOS</item>
+    </string-array>
+
+    <!-- DST: Nomi preset Raggio Angolo Notifiche (IT) -->
+    <string-array name="dst_notif_corner_names">
+        <item>8 dp</item>
+        <item>12 dp</item>
+        <item>16 dp</item>
+        <item>20 dp</item>
+        <item>24 dp (predefinito)</item>
+        <item>28 dp</item>
+        <item>32 dp</item>
+    </string-array>
+
+    <!-- DST: RVD preset names (IT) -->
+    <string-array name="dst_rvd_preset_names">
+        <item>Tondo Accento</item>
+        <item>Tondo Accento Sfumato</item>
+        <item>Tondo Grigio Scuro</item>
+        <item>Tondo Grigio Chiaro</item>
+        <item>Tondo Bianco</item>
+        <item>Tondo Scuro con bordo</item>
+        <item>Tondo Semi Trasparente</item>
+        <item>Tondo Trasparente con bordo</item>
+    </string-array>
+
+    <!-- DST: SVD preset names (IT) -->
+    <string-array name="dst_svd_preset_names">
+        <item>Squadrato Accento</item>
+        <item>Squadrato Accento Sfumato</item>
+        <item>Squadrato Grigio Scuro</item>
+        <item>Squadrato Grigio Chiaro</item>
+        <item>Squadrato Bianco</item>
+        <item>Squadrato Scuro con bordo</item>
+        <item>Squadrato Semi Trasparente</item>
+        <item>Squadrato Trasparente con bordo</item>
+    </string-array>
+
+    <!-- Clock: dimensione font -->
+    <string-array name="clock_size_entries">
+        <item>12 sp (predefinito)</item>
+        <item>13 sp</item>
+        <item>14 sp</item>
+        <item>15 sp</item>
+        <item>16 sp</item>
+        <item>17 sp</item>
+        <item>18 sp</item>
+        <item>19 sp</item>
+        <item>20 sp</item>
+    </string-array>
+
+    <!-- Clock: padding -->
+    <string-array name="clock_padding_entries">
+        <item>0 dp (predefinito)</item>
+        <item>4 dp</item>
+        <item>8 dp</item>
+        <item>12 dp</item>
+        <item>16 dp</item>
+    </string-array>
+
+    <!-- Clock chip: raggio angoli -->
+    <string-array name="clock_chip_corner_entries">
+        <item>0 dp (squadrato)</item>
+        <item>7 dp</item>
+        <item>14 dp (predefinito)</item>
+        <item>21 dp</item>
+        <item>28 dp (pillola)</item>
+    </string-array>
+
+    <!-- Clock chip: padding -->
+    <string-array name="clock_chip_padding_entries">
+        <item>0 dp</item>
+        <item>4 dp</item>
+        <item>8 dp (predefinito)</item>
+        <item>12 dp</item>
+        <item>16 dp</item>
+    </string-array>
+
+    <!-- Clock: formato data (pattern non traducibili, solo l'etichetta predefinito) -->
+    <string-array name="clock_date_format_entries">
+        <item>dd/MM/yy</item>
+        <item>MM/dd/yy</item>
+        <item>yyyy-MM-dd</item>
+        <item>dd-MM-yyyy</item>
+        <item>MMM dd</item>
+        <item>MMM dd, yyyy</item>
+        <item>MMMM dd, yyyy</item>
+        <item>EEE</item>
+        <item>EEE dd</item>
+        <item>EEE dd/MM</item>
+        <item>EEE dd MMM</item>
+        <item>EEE MMM dd</item>
+        <item>EEE MMMM dd</item>
+        <item>EEEE dd/MM</item>
+        <item>EEE, d MMM (predefinito)</item>
+    </string-array>
+
+    <!-- Grandezza font % batteria -->
+    <string-array name="battery_percent_size_entries">
+        <item>8 sp</item>
+        <item>9 sp</item>
+        <item>10 sp</item>
+        <item>11 sp</item>
+        <item>12 sp (predefinito)</item>
+        <item>13 sp</item>
+        <item>14 sp</item>
+        <item>15 sp</item>
+        <item>16 sp</item>
+        <item>18 sp</item>
+        <item>20 sp</item>
+    </string-array>
+
+    <!-- Nomi stili icona batteria (stesso ordine di STYLE_VALUES in BatteryIconFragment) -->
+    <string-array name="battery_style_names">
+        <item>RLandscape (Predefinito)</item>
+        <item>Landscape</item>
+        <item>Portrait Capsule</item>
+        <item>Portrait Lorn</item>
+        <item>Portrait MX</item>
+        <item>Portrait Airoo</item>
+        <item>RLandscape Stile A</item>
+        <item>Landscape Stile A</item>
+        <item>RLandscape Stile B</item>
+        <item>Landscape Stile B</item>
+        <item>Landscape iOS 15</item>
+        <item>Landscape iOS 16</item>
+        <item>Portrait Origami</item>
+        <item>Landscape Smiley</item>
+        <item>Landscape MIUI Pill</item>
+        <item>Landscape ColorOS</item>
+        <item>RLandscape ColorOS</item>
+        <item>Landscape Batteria A</item>
+        <item>Landscape Batteria B</item>
+        <item>Landscape Batteria C</item>
+        <item>Landscape Batteria D</item>
+        <item>Landscape Batteria E</item>
+        <item>Landscape Batteria F</item>
+        <item>Landscape Batteria G</item>
+        <item>Landscape Batteria H</item>
+        <item>Landscape Batteria I</item>
+        <item>Landscape Batteria J</item>
+        <item>Landscape Batteria K</item>
+        <item>Landscape Batteria L</item>
+        <item>Landscape Batteria M</item>
+        <item>Landscape Batteria N</item>
+        <item>Landscape Batteria O</item>
+        <item>Cerchio</item>
+        <item>Cerchio Tratteggiato</item>
+        <item>Cerchio Pieno</item>
+        <item>Landscape Kim</item>
+        <item>Landscape One UI 7</item>
+    </string-array>
+
+    <!-- Personalizza Riquadri (QsTilesCustomizeFragment) -->
+    <string-array name="qs_tile_animation_style_entries">
+        <item>Disattivata</item>
+        <item>Rotazione</item>
+        <item>Capovolgi X</item>
+        <item>Capovolgi Y</item>
+        <item>Scuotimento</item>
+        <item>Dissolvenza</item>
+        <item>Rimbalzo X</item>
+        <item>Rimbalzo Y</item>
+        <item>Pulsazione X</item>
+        <item>Pulsazione Y</item>
+    </string-array>
+    <string-array name="qs_tile_animation_interpolator_entries">
+        <item>Lineare</item>
+        <item>Accelerata</item>
+        <item>Decelerata</item>
+        <item>Accelerata/Decelerata</item>
+        <item>Rimbalzo</item>
+        <item>Overshoot</item>
+        <item>Anticipate</item>
+        <item>Anticipate/Overshoot</item>
+    </string-array>
+    <string-array name="qs_tile_transitions_entries">
+        <item>Disattivata</item>
+        <item>Cubo (entrata)</item>
+        <item>Cubo (uscita)</item>
+        <item>Fisarmonica</item>
+        <item>Sfondo verso primo piano</item>
+        <item>Profondità pagina</item>
+        <item>Dissolvenza</item>
+        <item>Primo piano verso sfondo</item>
+        <item>Rotazione verso il basso</item>
+        <item>Rotazione verso l\'alto</item>
+        <item>Pila</item>
+        <item>Tablet</item>
+        <item>Ingrandisci</item>
+        <item>Rimpicciolisci</item>
+        <item>Rimpicciolisci e scorri</item>
+        <item>Solleva dal centro</item>
+        <item>Rotazione attorno al basso</item>
+        <item>Trasla Y (dall\'alto in basso)</item>
+        <item>Trasla Y (dal basso in alto)</item>
+    </string-array>
+    <string-array name="brightness_slider_style_entries">
+        <item>Predefinito</item>
+        <item>Colore accento</item>
+        <item>Colore personalizzato</item>
+    </string-array>
+    <string-array name="qs_brightness_icon_entries">
+        <item>Predefinito</item>
+        <item>Scuro</item>
+        <item>Bianco</item>
+        <item>Accento</item>
+        <item>Personalizzata</item>
+    </string-array>
+
+</resources>

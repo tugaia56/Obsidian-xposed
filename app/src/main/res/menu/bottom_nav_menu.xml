@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/tab_dst"
+        android:icon="@drawable/ic_drawing"
+        android:title="@string/tab_dst_short" />
+
+    <item
+        android:id="@+id/tab_mods"
+        android:icon="@drawable/ic_mods_tools"
+        android:title="@string/tab_mods" />
+
+    <item
+        android:id="@+id/tab_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/tab_search" />
+
+    <item
+        android:id="@+id/tab_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/tab_settings" />
+
+</menu>
