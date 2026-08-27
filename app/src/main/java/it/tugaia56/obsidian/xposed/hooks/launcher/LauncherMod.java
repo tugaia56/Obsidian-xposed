@@ -87,8 +87,6 @@ public class LauncherMod extends XposedMods {
 
     private View mFastScrollView;
     private int mIconBitmapSize;
-    private Object mIconProvider;
-    private Object mIconObserver;
 
     public LauncherMod(Context context) {
         super(context);
@@ -117,14 +115,13 @@ public class LauncherMod extends XposedMods {
         mSearchMonochrome    = where.contains("3");
         mTaskbarMonochrome   = where.contains("4");
 
-        if (key.length > 0) {
-            if (KEY_HIDE_SCROLLER.equals(key[0])) {
-                updateFastScroll();
-            } else if (KEY_FORCE_THEMED_ICONS.equals(key[0]) || KEY_ALT_MONOCHROME.equals(key[0])
-                    || KEY_THEMED_ICONS_WHERE.equals(key[0])) {
-                updateIcons();
-            }
+        if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
+            updateFastScroll();
         }
+        // Icone a Tema does NOT force a live mass-refresh here on purpose — forcing every icon
+        // on screen to regenerate its monochrome bitmap at once froze the whole Launcher on
+        // test (main thread blocked long enough that widgets/search/drawer all went blank).
+        // Same rule as every other Launcher mod: enable, then reboot.
     }
 
     private static Set<String> parseThemedIconsWhere(String stored) {
@@ -546,6 +543,7 @@ public class LauncherMod extends XposedMods {
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
                         if (!mForceThemedIcons || !mAlternativeMono || param.getResult() != null) return;
+                        if (mIconBitmapSize <= 0) return; // BaseIconFactory hasn't run yet on this thread
                         PackageItemInfo info = (PackageItemInfo) param.args[1];
                         Drawable icon = info.loadIcon(mContext.getPackageManager());
                         param.setResult(new GoogleMonochromeIconFactory(icon, mIconBitmapSize));
@@ -563,6 +561,7 @@ public class LauncherMod extends XposedMods {
             protected void afterHookedMethod(MethodHookParam param) {
                 try {
                     if (param.getResult() != null || !mForceThemedIcons || mAlternativeMono) return;
+                    if (mIconBitmapSize <= 0) return; // BaseIconFactory hasn't run yet on this thread
                     // Skip if this call came from IconProvider.getIconWithOverrides — monochrome
                     // is already handled there, forcing it again here would double up.
                     StackTraceElement[] trace = new Throwable().getStackTrace();
@@ -578,32 +577,6 @@ public class LauncherMod extends XposedMods {
                 } catch (Throwable ignored) {}
             }
         });
-
-        // Live refresh when the toggles above change — re-triggers the launcher's own icon reload.
-        try {
-            Class<?> launcherAppState = findClass("com.android.launcher3.LauncherAppState", cl);
-            hookAllConstructors(launcherAppState, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    try {
-                        mIconProvider = getObjectField(param.thisObject, "mIconProvider");
-                    } catch (Throwable ignored) {}
-                }
-            });
-        } catch (Throwable t) {
-            log("LauncherAppState not found: " + t);
-        }
-        try {
-            Class<?> iconObserver = findClass("com.android.launcher3.LauncherAppState$IconObserver", cl);
-            hookAllConstructors(iconObserver, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    mIconObserver = param.thisObject;
-                }
-            });
-        } catch (Throwable t) {
-            log("LauncherAppState$IconObserver not found: " + t);
-        }
 
         // Dove applicare le icone a tema — indipendente da Forza/Alternativa, controlla solo se
         // il tema (quando già disponibile nativamente) viene applicato in ciascuna superficie.
@@ -651,16 +624,6 @@ public class LauncherMod extends XposedMods {
             case DISPLAY_SEARCH_RESULT_SMALL: return mSearchMonochrome;
             case DISPLAY_TASKBAR: return mTaskbarMonochrome;
             default: return mWorkspaceMonochrome;
-        }
-    }
-
-    private void updateIcons() {
-        if (mIconProvider == null || mIconObserver == null) return;
-        try {
-            String systemIconState = (String) callMethod(mIconProvider, "getSystemIconState");
-            callMethod(mIconObserver, "onSystemIconStateChanged", systemIconState);
-        } catch (Throwable t) {
-            log("updateIcons failed: " + t);
         }
     }
 
