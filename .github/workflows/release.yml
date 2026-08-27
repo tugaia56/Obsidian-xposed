@@ -32,13 +32,18 @@ jobs:
         run: chmod +x gradlew
 
       - name: Signature files preparation
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE }}
+          KS_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KS_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
-            echo storePassword=${{ secrets.KEYSTORE_PASSWORD }} >> keystore.properties
-            echo keyAlias=${{ secrets.KEY_ALIAS }} >> keystore.properties
-            echo keyPassword=${{ secrets.KEY_PASSWORD }} >> keystore.properties
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo storePassword=$KS_PASSWORD >> keystore.properties
+            echo keyAlias=$KS_ALIAS >> keystore.properties
+            echo keyPassword=$KS_KEY_PASSWORD >> keystore.properties
             echo storeFile=${{ github.workspace }}/key.jks >> keystore.properties
-            echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
+            echo "$KEYSTORE_B64" | tr -d '[:space:]' | base64 --decode --ignore-garbage > ${{ github.workspace }}/key.jks
           fi
 
       - name: Gradle Build
@@ -73,7 +78,7 @@ jobs:
           artifacts: 'app/build/outputs/apk/release/Obsidian-release.apk'
 
       - name: Telegram Group Post
-        if: ${{ !cancelled() && vars.HAS_TELEGRAM_SECRETS == 'true' }}
+        if: ${{ success() && vars.HAS_TELEGRAM_SECRETS == 'true' }}
         run: |
           curl -X POST \
             -H 'Content-Type: application/json' \
