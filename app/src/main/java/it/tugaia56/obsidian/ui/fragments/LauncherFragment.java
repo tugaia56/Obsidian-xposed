@@ -38,11 +38,12 @@ import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
  * Launcher hub — full mirror of OC's launcher_mods.xml (Home Layout, Folder Layout, Drawer,
  * Dock Background, Recents, Themed Icons, Miscellaneous). Pref keys match OC's exactly.
  *
- * Real, working hooks so far: Recents button color (Fabricated RRO Overlay, not a hook) and
- * hide app labels — Home/Drawer (LauncherMod, ported from OC's Launcher.java). Everything
- * else is UI/prefs only, marked with [[wip_inline_suffix]] in the row summary — being ported
- * one feature at a time from OC's Launcher.java/DockBackground.java/ThemedIcons.java so each
- * lands as its own testable build.
+ * Real, working hooks so far: Recents button color (Fabricated RRO Overlay, not a hook) and,
+ * via LauncherMod (ported from OC's Launcher.java): hide app labels (Home/Drawer) and the
+ * whole Recenti section (Apri Dettagli App, Disabilita Pagina Recenti Precedente, Sostituisci
+ * Blocco). Everything else is UI/prefs only, marked with [[wip_inline_suffix]] in the row
+ * summary — being ported one section at a time from OC's
+ * Launcher.java/DockBackground.java/ThemedIcons.java so each lands as its own testable build.
  */
 public class LauncherFragment extends Fragment {
 
@@ -121,9 +122,9 @@ public class LauncherFragment extends Fragment {
         // ── Recents (first, per request) ────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_recents))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_app_details_title, R.string.launcher_app_details_summary, KEY_OPEN_APP_DETAILS, false),
-                boolItem(R.string.launcher_disable_recents_previous_page_title, R.string.launcher_disable_recents_previous_page_summary, KEY_DISABLE_PREV_RECENTS, false),
-                boolItem(R.string.launcher_replace_lock_title, R.string.launcher_replace_lock_summary, KEY_REPLACE_LOCK, false))));
+                boolItemWithNote(R.string.launcher_app_details_title, R.string.launcher_app_details_summary, KEY_OPEN_APP_DETAILS),
+                boolItemWithNote(R.string.launcher_disable_recents_previous_page_title, R.string.launcher_disable_recents_previous_page_summary, KEY_DISABLE_PREV_RECENTS),
+                boolItemWithNote(R.string.launcher_replace_lock_title, R.string.launcher_replace_lock_summary, KEY_REPLACE_LOCK))));
         chain.add(new SwitchWidgetAdapter(List.of(recentsButtonColorSwitch())));
         if (ObsidianPrefs.getBoolean(KEY_RECENTS_BTN_COLOR + "_on", false)) {
             chain.add(recentsButtonColorPickerRow());
