@@ -1,0 +1,8 @@
+Aggiunto:
+- Build automatica: tag su Git -> APK firmato + GitHub Release + invio su Telegram
+
+Aggiornato:
+-
+
+Rimosso:
+-

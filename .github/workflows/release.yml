@@ -28,6 +28,9 @@ jobs:
       - name: Version Bump
         run: .github/bumpVersion.sh
 
+      - name: Extract Changes
+        run: .github/extractChanges.sh
+
       - name: Gradlew Permissions
         run: chmod +x gradlew
 
@@ -71,7 +74,7 @@ jobs:
         with:
           tag: ${{ env.VTag }}
           name: ${{ env.VName }}
-          body: ${{ env.VName }} released!
+          body: ${{ env.Body }}
           prerelease: false
           allowUpdates: false
           draft: false
@@ -83,8 +86,14 @@ jobs:
           TG_TOKEN: ${{ secrets.TELEGRAM_TK }}
           TG_CHAT: ${{ secrets.OBSIDIAN_GROUP }}
         run: |
+          # Messaggio separato dal file: le didascalie dei documenti su Telegram sono
+          # limitate a 1024 caratteri, un changelog più lungo verrebbe troncato.
           curl -X POST \
             -F "chat_id=$TG_CHAT" \
-            -F "caption=$(cat telegram.msg)" \
+            -F "text=$(cat telegram.msg)" \
+            "https://api.telegram.org/bot$TG_TOKEN/sendMessage"
+          curl -X POST \
+            -F "chat_id=$TG_CHAT" \
+            -F "caption=${{ env.VName }}" \
             -F "document=@app/build/outputs/apk/release/${{ env.ApkName }}" \
             "https://api.telegram.org/bot$TG_TOKEN/sendDocument"
