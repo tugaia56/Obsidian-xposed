@@ -356,7 +356,7 @@
     <string name="dock_background_amount">Livello sfocatura</string>
     <string name="dock_background_radius">Raggio sfondo</string>
     <string name="launcher_recents">Recenti</string>
-    <string name="launcher_reboot_banner">⚠ Riavvia il telefono dopo aver attivato una mod qui sotto\nNon basta forzare l\'arresto dell\'app Launcher</string>
+    <string name="launcher_reboot_banner">⚠ Attiva le mod che vuoi, poi riavvia il telefono\nNon basta forzare l\'arresto del Launcher</string>
     <string name="launcher_recents_color_no_reboot">Si applica subito, non serve riavviare — riapri Recenti se non lo vedi cambiare al momento</string>
     <string name="launcher_recents_button_color_title">Colore Pulsante Recenti</string>
     <string name="launcher_app_details_title">Apri dettagli app</string>
