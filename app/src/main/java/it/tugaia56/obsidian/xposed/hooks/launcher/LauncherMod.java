@@ -532,9 +532,11 @@ public class LauncherMod extends XposedMods {
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
                         mIconBitmapSize = getIntField(param.thisObject, "mIconBitmapSize");
+                        log("DIAG BaseIconFactory constructed, mIconBitmapSize=" + mIconBitmapSize);
                     } catch (Throwable ignored) {}
                 }
             });
+            log("DIAG BaseIconFactory hook attached OK");
         } catch (Throwable t) {
             log("BaseIconFactory not found: " + t);
         }
@@ -545,6 +547,8 @@ public class LauncherMod extends XposedMods {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
+                        log("DIAG getIconThemeDrawable called, force=" + mForceThemedIcons
+                                + " alt=" + mAlternativeMono + " resultNull=" + (param.getResult() == null));
                         if (!mForceThemedIcons || !mAlternativeMono || param.getResult() != null) return;
                         if (mIconBitmapSize <= 0) return; // BaseIconFactory hasn't run yet on this thread
                         PackageItemInfo info = (PackageItemInfo) param.args[1];
@@ -555,6 +559,7 @@ public class LauncherMod extends XposedMods {
                     }
                 }
             });
+            log("DIAG UxIconLoaderHelper hook attached OK");
         } catch (Throwable t) {
             log("UxIconLoaderHelper not found: " + t);
         }
@@ -563,6 +568,8 @@ public class LauncherMod extends XposedMods {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
                 try {
+                    log("DIAG getMonochrome called, force=" + mForceThemedIcons
+                            + " alt=" + mAlternativeMono + " resultNull=" + (param.getResult() == null));
                     if (param.getResult() != null || !mForceThemedIcons || mAlternativeMono) return;
                     if (mIconBitmapSize <= 0) return; // BaseIconFactory hasn't run yet on this thread
                     // Skip if this call came from IconProvider.getIconWithOverrides — monochrome
@@ -590,6 +597,7 @@ public class LauncherMod extends XposedMods {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
+                        log("DIAG applyIconAndLabel called, allowMap=" + mAllowCustomIconMap);
                         if (!mAllowCustomIconMap) return;
                         Object itemInfoWithIcon = param.args[0];
                         if (itemInfoWithIcon == null) return;
@@ -603,6 +611,7 @@ public class LauncherMod extends XposedMods {
                     }
                 }
             });
+            log("DIAG OplusBubbleTextView hook attached OK");
         } catch (Throwable t) {
             log("OplusBubbleTextView not found: " + t);
         }
