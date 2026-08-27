@@ -9,12 +9,16 @@ import static de.robv.android.xposed.XposedHelpers.getIntField;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.getStaticIntField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
+import static de.robv.android.xposed.XposedHelpers.getBooleanField;
 import static de.robv.android.xposed.XposedHelpers.setBooleanField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
 import static it.tugaia56.obsidian.xposed.XPrefs.Xprefs;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageItemInfo;
+import android.graphics.drawable.AdaptiveIconDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Process;
 import android.provider.Settings;
@@ -22,17 +26,23 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import it.tugaia56.obsidian.xposed.XposedMods;
+import it.tugaia56.obsidian.xposed.utils.GoogleMonochromeIconFactory;
 
 /**
  * Real OC Launcher.java mechanism, ported one section at a time. So far: hide app labels
  * (Home/Drawer), the full "Recenti" section (Apri Dettagli App, Disabilita Pagina Recenti
  * Precedente, Sostituisci Blocco), Rimuovi Impaginazione (Home + Cartelle), Nascondi
- * Scroller, and Comportamento Personalizzato Swipe Destro (Discover/Shelf panel). Rest of
- * OC's Launcher.java (columns/rows, folder/drawer rearrange, force-dock) is next, one at a
- * time so each can be tested in isolation.
+ * Scroller, Comportamento Personalizzato Swipe Destro (Discover/Shelf panel), and Icone a
+ * Tema (Forza/Alternativa monocroma via GoogleMonochromeIconFactory, ported verbatim from
+ * OC, + Dove applicare per superficie). Rest of OC's Launcher.java (columns/rows,
+ * folder/drawer rearrange, force-dock, Dock Background) is next, one at a time so each can
+ * be tested in isolation.
  */
 public class LauncherMod extends XposedMods {
 
@@ -46,6 +56,16 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_HIDE_SCROLLER        = "hide_scroller";
     private static final String KEY_SWIPE_RIGHT_ENABLED  = "launcher_custom_shelf_switch";
     private static final String KEY_SWIPE_RIGHT_MODE     = "laucher_shelf_custom"; // matches OC/UI exactly
+    private static final String KEY_FORCE_THEMED_ICONS   = "force_themed_launcher_icons";
+    private static final String KEY_ALT_MONOCHROME       = "alternative_monochrome";
+    private static final String KEY_THEMED_ICONS_WHERE   = "custom_themed_icons_where"; // comma-separated indices, matches LauncherFragment's format
+
+    private static final int DISPLAY_WORKSPACE           = 0;
+    private static final int DISPLAY_ALL_APPS            = 1;
+    private static final int DISPLAY_FOLDER              = 2;
+    private static final int DISPLAY_TASKBAR              = 5;
+    private static final int DISPLAY_SEARCH_RESULT       = 6;
+    private static final int DISPLAY_SEARCH_RESULT_SMALL = 7;
 
     private boolean mHideDesktopLabels = false;
     private boolean mHideDrawerLabels  = false;
@@ -57,8 +77,18 @@ public class LauncherMod extends XposedMods {
     private boolean mHideScroller           = false;
     private boolean mCustomShelfBehavior    = false;
     private int mShelfBehavior              = 2; // SHELF_STOCK — matches default when disabled
+    private boolean mForceThemedIcons  = false;
+    private boolean mAlternativeMono   = false;
+    private boolean mWorkspaceMonochrome = true;
+    private boolean mDrawerMonochrome    = true;
+    private boolean mFolderMonochrome    = true;
+    private boolean mSearchMonochrome    = true;
+    private boolean mTaskbarMonochrome   = true;
 
     private View mFastScrollView;
+    private int mIconBitmapSize;
+    private Object mIconProvider;
+    private Object mIconObserver;
 
     public LauncherMod(Context context) {
         super(context);
@@ -78,9 +108,32 @@ public class LauncherMod extends XposedMods {
         mCustomShelfBehavior    = Xprefs.getBoolean(KEY_SWIPE_RIGHT_ENABLED, false);
         mShelfBehavior          = Xprefs.getInt(KEY_SWIPE_RIGHT_MODE, 2);
 
-        if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
-            updateFastScroll();
+        mForceThemedIcons = Xprefs.getBoolean(KEY_FORCE_THEMED_ICONS, false);
+        mAlternativeMono  = Xprefs.getBoolean(KEY_ALT_MONOCHROME, false);
+        Set<String> where = parseThemedIconsWhere(Xprefs.getString(KEY_THEMED_ICONS_WHERE, "0,1,2,3,4"));
+        mWorkspaceMonochrome = where.contains("0");
+        mDrawerMonochrome    = where.contains("1");
+        mFolderMonochrome    = where.contains("2");
+        mSearchMonochrome    = where.contains("3");
+        mTaskbarMonochrome   = where.contains("4");
+
+        if (key.length > 0) {
+            if (KEY_HIDE_SCROLLER.equals(key[0])) {
+                updateFastScroll();
+            } else if (KEY_FORCE_THEMED_ICONS.equals(key[0]) || KEY_ALT_MONOCHROME.equals(key[0])
+                    || KEY_THEMED_ICONS_WHERE.equals(key[0])) {
+                updateIcons();
+            }
         }
+    }
+
+    private static Set<String> parseThemedIconsWhere(String stored) {
+        Set<String> result = new HashSet<>();
+        for (String s : stored.split(",")) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) result.add(trimmed);
+        }
+        return result;
     }
 
     @Override
@@ -92,6 +145,7 @@ public class LauncherMod extends XposedMods {
         hookRemovePagination(lpparam);
         hookHideScroller(lpparam);
         hookSwipeRightBehavior(lpparam);
+        hookThemedIcons(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -462,6 +516,151 @@ public class LauncherMod extends XposedMods {
             });
         } catch (Throwable t) {
             log("FeatureOption not found: " + t);
+        }
+    }
+
+    // ── Icone a Tema (monocrome, stile Material You) ────────────────────────────────────────
+    private void hookThemedIcons(XC_LoadPackage.LoadPackageParam lpparam) {
+        ClassLoader cl = lpparam.classLoader;
+
+        // Forza Icone a Tema / Alternativa — genera un'icona monocroma anche per le app che
+        // non la supportano nativamente, invece di lasciare l'icona a colori originale.
+        try {
+            Class<?> baseIconFactory = findClass("com.android.launcher3.icons.BaseIconFactory", cl);
+            hookAllConstructors(baseIconFactory, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        mIconBitmapSize = getIntField(param.thisObject, "mIconBitmapSize");
+                    } catch (Throwable ignored) {}
+                }
+            });
+        } catch (Throwable t) {
+            log("BaseIconFactory not found: " + t);
+        }
+
+        try {
+            Class<?> uxIconLoaderHelper = findClass("com.oplus.uxicon.ui.util.UxIconLoaderHelper", cl);
+            hookAllMethods(uxIconLoaderHelper, "getIconThemeDrawable", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        if (!mForceThemedIcons || !mAlternativeMono || param.getResult() != null) return;
+                        PackageItemInfo info = (PackageItemInfo) param.args[1];
+                        Drawable icon = info.loadIcon(mContext.getPackageManager());
+                        param.setResult(new GoogleMonochromeIconFactory(icon, mIconBitmapSize));
+                    } catch (Throwable t) {
+                        log("hookThemedIcons (getIconThemeDrawable fallback) failed: " + t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            log("UxIconLoaderHelper not found: " + t);
+        }
+
+        hookAllMethods(AdaptiveIconDrawable.class, "getMonochrome", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                try {
+                    if (param.getResult() != null || !mForceThemedIcons || mAlternativeMono) return;
+                    // Skip if this call came from IconProvider.getIconWithOverrides — monochrome
+                    // is already handled there, forcing it again here would double up.
+                    StackTraceElement[] trace = new Throwable().getStackTrace();
+                    if (trace.length > 4 && trace[4].getMethodName().toLowerCase().contains("override")) return;
+
+                    GoogleMonochromeIconFactory mono = (GoogleMonochromeIconFactory)
+                            getAdditionalInstanceField(param.thisObject, "mMonoFactoryObsidian");
+                    if (mono == null) {
+                        mono = new GoogleMonochromeIconFactory((AdaptiveIconDrawable) param.thisObject, mIconBitmapSize);
+                        setAdditionalInstanceField(param.thisObject, "mMonoFactoryObsidian", mono);
+                    }
+                    param.setResult(mono);
+                } catch (Throwable ignored) {}
+            }
+        });
+
+        // Live refresh when the toggles above change — re-triggers the launcher's own icon reload.
+        try {
+            Class<?> launcherAppState = findClass("com.android.launcher3.LauncherAppState", cl);
+            hookAllConstructors(launcherAppState, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        mIconProvider = getObjectField(param.thisObject, "mIconProvider");
+                    } catch (Throwable ignored) {}
+                }
+            });
+        } catch (Throwable t) {
+            log("LauncherAppState not found: " + t);
+        }
+        try {
+            Class<?> iconObserver = findClass("com.android.launcher3.LauncherAppState$IconObserver", cl);
+            hookAllConstructors(iconObserver, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    mIconObserver = param.thisObject;
+                }
+            });
+        } catch (Throwable t) {
+            log("LauncherAppState$IconObserver not found: " + t);
+        }
+
+        // Dove applicare le icone a tema — indipendente da Forza/Alternativa, controlla solo se
+        // il tema (quando già disponibile nativamente) viene applicato in ciascuna superficie.
+        try {
+            Class<?> bubbleTextView = findClass("com.android.launcher3.OplusBubbleTextView", cl);
+            hookAllMethods(bubbleTextView, "applyIconAndLabel", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        Object itemInfoWithIcon = param.args[0];
+                        if (itemInfoWithIcon == null) return;
+                        boolean alreadyEdited = getBooleanField(itemInfoWithIcon, "mIsIconEdited");
+                        if (alreadyEdited) return;
+                        int display = getIntField(param.thisObject, "mDisplay");
+                        Object newIcon = callMethod(itemInfoWithIcon, "newIcon", mContext, shouldUseTheme(display) ? 1 : 0);
+                        callMethod(param.thisObject, "setIcon", newIcon);
+                    } catch (Throwable t) {
+                        log("hookThemedIcons (applyIconAndLabel) failed: " + t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            log("OplusBubbleTextView not found: " + t);
+        }
+
+        // Anteprime nelle cartelle
+        try {
+            Class<?> previewItemManager = findClass("com.android.launcher3.folder.PreviewItemManager", cl);
+            hookAllMethods(previewItemManager, "getNewIcon", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    param.args[1] = mWorkspaceMonochrome ? 1 : 0;
+                }
+            });
+        } catch (Throwable t) {
+            log("PreviewItemManager not found: " + t);
+        }
+    }
+
+    private boolean shouldUseTheme(int display) {
+        switch (display) {
+            case DISPLAY_ALL_APPS: return mDrawerMonochrome;
+            case DISPLAY_FOLDER: return mFolderMonochrome;
+            case DISPLAY_SEARCH_RESULT:
+            case DISPLAY_SEARCH_RESULT_SMALL: return mSearchMonochrome;
+            case DISPLAY_TASKBAR: return mTaskbarMonochrome;
+            default: return mWorkspaceMonochrome;
+        }
+    }
+
+    private void updateIcons() {
+        if (mIconProvider == null || mIconObserver == null) return;
+        try {
+            String systemIconState = (String) callMethod(mIconProvider, "getSystemIconState");
+            callMethod(mIconObserver, "onSystemIconStateChanged", systemIconState);
+        } catch (Throwable t) {
+            log("updateIcons failed: " + t);
         }
     }
 

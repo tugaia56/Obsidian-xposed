@@ -179,8 +179,8 @@ public class LauncherFragment extends Fragment {
         // ── Themed icons ─────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_themed_icons))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS, false),
-                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME, false))));
+                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS),
+                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME))));
         chain.add(themedIconsWhereRow());
 
         // ── Miscellaneous ────────────────────────────────────────────────────
@@ -336,7 +336,7 @@ public class LauncherFragment extends Fragment {
         };
         final ListWidgetAdapter[] adapterRef = new ListWidgetAdapter[1];
         ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
-                getString(R.string.themed_icons_where_switch) + getString(R.string.wip_inline_suffix),
+                getString(R.string.themed_icons_where_switch),
                 themedIconsWhereSummary(entries),
                 () -> showThemedIconsWhereDialog(entries, adapterRef[0]));
         ListWidgetAdapter adapter = new ListWidgetAdapter(List.of(item));
