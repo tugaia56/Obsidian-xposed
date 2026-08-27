@@ -8,6 +8,7 @@
     android:layout_marginTop="12dp"
     android:layout_marginBottom="4dp"
     android:background="@drawable/bg_warning_banner"
+    android:gravity="center"
     android:orientation="vertical"
     android:padding="14dp">
 
@@ -16,6 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:textAlignment="center"
         android:textAllCaps="true"
         android:textColor="#FFFFA726"
         android:textSize="14sp"
