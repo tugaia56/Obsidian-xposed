@@ -1,6 +1,6 @@
 package it.tugaia56.obsidian.xposed.hooks.launcher;
 
-import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
+import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.getIntField;
 import static de.robv.android.xposed.XposedHelpers.getStaticIntField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
@@ -42,7 +42,9 @@ public class LauncherMod extends XposedMods {
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         Class<?> bubbleTextView = lpparam.classLoader.loadClass("com.android.launcher3.BubbleTextView");
 
-        findAndHookMethod(bubbleTextView, "applyLabel", CharSequence.class, new XC_MethodHook() {
+        // hookAllMethods (not findAndHookMethod with a guessed signature) — applyLabel has
+        // multiple overloads across OOS versions, same approach OC's ReflectedClass.before() uses.
+        hookAllMethods(bubbleTextView, "applyLabel", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 int display = getIntField(param.thisObject, "mDisplay");
