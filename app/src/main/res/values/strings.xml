@@ -288,6 +288,7 @@
     <string name="nav_lock_misc_summary">Other lock screen tweaks</string>
     <string name="section_wip">Work in progress</string>
     <string name="section_wip_summary">This section is being built — check back soon</string>
+    <string name="wip_inline_suffix"> · coming soon</string>
     <string name="nav_launcher">Launcher</string>
     <string name="nav_launcher_summary">Recents and other launcher tweaks</string>
     <string name="nav_recents">Recents</string>

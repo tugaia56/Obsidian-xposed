@@ -40,6 +40,7 @@ import it.tugaia56.obsidian.xposed.hooks.systemui.QsWidgetsMod;
 import it.tugaia56.obsidian.xposed.hooks.systemui.QsSeparateMod;
 import it.tugaia56.obsidian.xposed.hooks.framework.LockScreenPowerMenuMod;
 import it.tugaia56.obsidian.xposed.hooks.settings.CustomShortcut;
+import it.tugaia56.obsidian.xposed.hooks.launcher.LauncherMod;
 
 public class ModPacks {
     public static List<Class<? extends XposedMods>> getMods(String packageName) {
@@ -85,6 +86,9 @@ public class ModPacks {
         }
         if (Constants.Packages.FRAMEWORK.equals(packageName)) {
             mods.add(LockScreenPowerMenuMod.class);
+        }
+        if (Constants.Packages.LAUNCHER.equals(packageName)) {
+            mods.add(LauncherMod.class);
         }
         return mods;
     }

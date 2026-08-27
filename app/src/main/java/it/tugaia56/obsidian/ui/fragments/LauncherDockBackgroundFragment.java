@@ -21,6 +21,7 @@ import it.tugaia56.obsidian.utils.ObsidianPrefs;
 
 /**
  * Dock Background sub-screen — mirrors OC's launcher_dock_background.xml.
+ * UI/prefs only for now (no hook yet) — marked with [[wip_inline_suffix]] on every row.
  */
 public class LauncherDockBackgroundFragment extends Fragment {
 
@@ -47,11 +48,11 @@ public class LauncherDockBackgroundFragment extends Fragment {
         RecyclerView rv = (RecyclerView) view;
 
         SwitchWidgetAdapter toggles = new SwitchWidgetAdapter(List.of(
-                boolItem(getString(R.string.dock_background), KEY_DOCK_BG),
-                boolItem(getString(R.string.dock_background_material), KEY_DOCK_BG_MATERIAL)));
+                boolItem(getString(R.string.dock_background) + getString(R.string.wip_inline_suffix), KEY_DOCK_BG),
+                boolItem(getString(R.string.dock_background_material) + getString(R.string.wip_inline_suffix), KEY_DOCK_BG_MATERIAL)));
 
-        SliderWidgetAdapter amount = sliderRow(getString(R.string.dock_background_amount), KEY_DOCK_BG_AMOUNT, 0, 4, 0);
-        SliderWidgetAdapter radius = sliderRow(getString(R.string.dock_background_radius), KEY_DOCK_BG_RADIUS, 0, 100, 30);
+        SliderWidgetAdapter amount = sliderRow(getString(R.string.dock_background_amount) + getString(R.string.wip_inline_suffix), KEY_DOCK_BG_AMOUNT, 0, 4, 0);
+        SliderWidgetAdapter radius = sliderRow(getString(R.string.dock_background_radius) + getString(R.string.wip_inline_suffix), KEY_DOCK_BG_RADIUS, 0, 100, 30);
 
         rv.setAdapter(new ConcatAdapter(toggles, amount, radius));
     }

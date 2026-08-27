@@ -285,6 +285,7 @@
     <string name="nav_lock_misc_summary">Altre personalizzazioni schermata di blocco</string>
     <string name="section_wip">In lavorazione</string>
     <string name="section_wip_summary">Questa sezione è in costruzione — torna a trovarci presto</string>
+    <string name="wip_inline_suffix"> · presto disponibile</string>
     <string name="nav_launcher">Launcher</string>
     <string name="nav_launcher_summary">Recenti e altre personalizzazioni launcher</string>
     <string name="nav_recents">Recenti</string>

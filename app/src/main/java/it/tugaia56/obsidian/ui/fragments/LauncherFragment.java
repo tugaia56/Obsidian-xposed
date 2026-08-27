@@ -38,9 +38,11 @@ import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
  * Launcher hub — full mirror of OC's launcher_mods.xml (Home Layout, Folder Layout, Drawer,
  * Dock Background, Recents, Themed Icons, Miscellaneous). Pref keys match OC's exactly.
  *
- * UI/prefs only for now — no Xposed hooks wired yet (needs per-feature reverse engineering
- * on the launcher package, same process as the status bar work). Exception: the Recents
- * button color, which is a Fabricated RRO Overlay (same mechanism as DST colors), not a hook.
+ * Real, working hooks so far: Recents button color (Fabricated RRO Overlay, not a hook) and
+ * hide app labels — Home/Drawer (LauncherMod, ported from OC's Launcher.java). Everything
+ * else is UI/prefs only, marked with [[wip_inline_suffix]] in the row summary — being ported
+ * one feature at a time from OC's Launcher.java/DockBackground.java/ThemedIcons.java so each
+ * lands as its own testable build.
  */
 public class LauncherFragment extends Fragment {
 
@@ -119,9 +121,9 @@ public class LauncherFragment extends Fragment {
         // ── Recents (first, per request) ────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_recents))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_app_details_title, R.string.launcher_app_details_summary, KEY_OPEN_APP_DETAILS),
-                boolItem(R.string.launcher_disable_recents_previous_page_title, R.string.launcher_disable_recents_previous_page_summary, KEY_DISABLE_PREV_RECENTS),
-                boolItem(R.string.launcher_replace_lock_title, R.string.launcher_replace_lock_summary, KEY_REPLACE_LOCK))));
+                boolItem(R.string.launcher_app_details_title, R.string.launcher_app_details_summary, KEY_OPEN_APP_DETAILS, false),
+                boolItem(R.string.launcher_disable_recents_previous_page_title, R.string.launcher_disable_recents_previous_page_summary, KEY_DISABLE_PREV_RECENTS, false),
+                boolItem(R.string.launcher_replace_lock_title, R.string.launcher_replace_lock_summary, KEY_REPLACE_LOCK, false))));
         chain.add(new SwitchWidgetAdapter(List.of(recentsButtonColorSwitch())));
         if (ObsidianPrefs.getBoolean(KEY_RECENTS_BTN_COLOR + "_on", false)) {
             chain.add(recentsButtonColorPickerRow());
@@ -130,28 +132,28 @@ public class LauncherFragment extends Fragment {
         // ── Home Layout ──────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_layout))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_edit_layout, null, KEY_REARRANGE_HOME))));
-        chain.add(sliderRow(getString(R.string.launcher_columns), KEY_LAUNCHER_COLUMNS, 4, 8, 4));
-        chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4));
+                boolItem(R.string.launcher_edit_layout, null, KEY_REARRANGE_HOME, false))));
+        chain.add(sliderRow(getString(R.string.launcher_columns), KEY_LAUNCHER_COLUMNS, 4, 8, 4, false));
+        chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4, false));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS),
-                boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS))));
+                boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS, false))));
 
         // ── Folder Layout ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_folder_layout))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_folder_edit_layout, null, KEY_REARRANGE_FOLDER))));
-        chain.add(sliderRow(getString(R.string.launcher_folder_columns), KEY_FOLDER_MAX_COLUMNS, 3, 7, 3));
-        chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3));
+                boolItem(R.string.launcher_folder_edit_layout, null, KEY_REARRANGE_FOLDER, false))));
+        chain.add(sliderRow(getString(R.string.launcher_folder_columns), KEY_FOLDER_MAX_COLUMNS, 3, 7, 3, false));
+        chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3, false));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW),
-                boolItem(R.string.remove_folder_pagination_title, null, KEY_REMOVE_FOLDER_PAGE))));
+                boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW, false),
+                boolItem(R.string.remove_folder_pagination_title, null, KEY_REMOVE_FOLDER_PAGE, false))));
 
         // ── Drawer ───────────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.drawer))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_drawer_edit_columns, null, KEY_REARRANGE_DRAWER))));
-        chain.add(sliderRow(getString(R.string.drawer_columns), KEY_DRAWER_COLUMNS, 3, 7, 4));
+                boolItem(R.string.launcher_drawer_edit_columns, null, KEY_REARRANGE_DRAWER, false))));
+        chain.add(sliderRow(getString(R.string.drawer_columns), KEY_DRAWER_COLUMNS, 3, 7, 4, false));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.hide_app_labels, R.string.hide_app_labels_drawer, KEY_DRAWER_HIDE_LABELS))));
 
@@ -159,22 +161,22 @@ public class LauncherFragment extends Fragment {
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
                 R.drawable.ic_mods_tools,
                 getString(R.string.dock_background),
-                null,
+                getString(R.string.wip_inline_suffix).replaceFirst("^ · ", ""),
                 () -> navigate(new LauncherDockBackgroundFragment(), getString(R.string.dock_background)),
                 ACCENT_DOCK))));
 
         // ── Themed icons ─────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_themed_icons))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS),
-                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME))));
+                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS, false),
+                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME, false))));
         chain.add(themedIconsWhereRow());
 
         // ── Miscellaneous ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.misc_category))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.remove_home_pagination, null, KEY_REMOVE_HOME_PAGE),
-                boolItem(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER))));
+                boolItem(R.string.remove_home_pagination, null, KEY_REMOVE_HOME_PAGE, false),
+                boolItem(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER, false))));
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
                 R.drawable.ic_mods_tools,
                 getString(R.string.custom_swipe_right_behavior_title),
@@ -288,9 +290,16 @@ public class LauncherFragment extends Fragment {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private SwitchWidgetAdapter.SwitchItem boolItem(int titleRes, Integer summaryRes, String key) {
+        return boolItem(titleRes, summaryRes, key, true);
+    }
+
+    /** implemented=false appends a "coming soon" marker to the summary — the switch still
+     *  saves its pref (so the value is ready once the hook lands), it just does nothing yet. */
+    private SwitchWidgetAdapter.SwitchItem boolItem(int titleRes, Integer summaryRes, String key, boolean implemented) {
+        String summary = summaryRes != null ? getString(summaryRes) : null;
+        if (!implemented) summary = (summary != null ? summary : "") + getString(R.string.wip_inline_suffix);
         SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
-                getString(titleRes),
-                summaryRes != null ? getString(summaryRes) : null,
+                getString(titleRes), summary,
                 ObsidianPrefs.getBoolean(key, false),
                 null);
         item.onChanged = () -> ObsidianPrefs.putBoolean(key, item.checked);
@@ -299,6 +308,11 @@ public class LauncherFragment extends Fragment {
 
     /** A row with an inline slider for an integer pref (mirrors OC's slider prefs). */
     private SliderWidgetAdapter sliderRow(String title, String key, int min, int max, int def) {
+        return sliderRow(title, key, min, max, def, true);
+    }
+
+    private SliderWidgetAdapter sliderRow(String title, String key, int min, int max, int def, boolean implemented) {
+        if (!implemented) title = title + getString(R.string.wip_inline_suffix);
         int current = ObsidianPrefs.getInt(key, def);
         SliderWidgetAdapter.SliderItem item = new SliderWidgetAdapter.SliderItem(
                 title, current, min, max, "", def,
@@ -315,7 +329,8 @@ public class LauncherFragment extends Fragment {
         };
         final ListWidgetAdapter[] adapterRef = new ListWidgetAdapter[1];
         ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
-                getString(R.string.themed_icons_where_switch), themedIconsWhereSummary(entries),
+                getString(R.string.themed_icons_where_switch) + getString(R.string.wip_inline_suffix),
+                themedIconsWhereSummary(entries),
                 () -> showThemedIconsWhereDialog(entries, adapterRef[0]));
         ListWidgetAdapter adapter = new ListWidgetAdapter(List.of(item));
         adapterRef[0] = adapter;
