@@ -28,6 +28,7 @@ import it.tugaia56.obsidian.ui.adapters.NavAdapter;
 import it.tugaia56.obsidian.ui.adapters.SectionTitleAdapter;
 import it.tugaia56.obsidian.ui.adapters.SliderWidgetAdapter;
 import it.tugaia56.obsidian.ui.adapters.SwitchWidgetAdapter;
+import it.tugaia56.obsidian.ui.adapters.WarningBannerAdapter;
 import it.tugaia56.obsidian.ui.events.ColorSelectedEvent;
 import it.tugaia56.obsidian.utils.Constants;
 import it.tugaia56.obsidian.utils.ObsidianPrefs;
@@ -125,12 +126,15 @@ public class LauncherFragment extends Fragment {
     private void rebuild() {
         List<RecyclerView.Adapter<?>> chain = new ArrayList<>();
 
+        // ── Warning banner, first thing on screen ────────────────────────────
+        chain.add(new WarningBannerAdapter(getString(R.string.launcher_reboot_banner)));
+
         // ── Recents (first, per request) ────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_recents))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItemWithNote(R.string.launcher_app_details_title, R.string.launcher_app_details_summary, KEY_OPEN_APP_DETAILS),
-                boolItemWithNote(R.string.launcher_disable_recents_previous_page_title, R.string.launcher_disable_recents_previous_page_summary, KEY_DISABLE_PREV_RECENTS),
-                boolItemWithNote(R.string.launcher_replace_lock_title, R.string.launcher_replace_lock_summary, KEY_REPLACE_LOCK))));
+                boolItem(R.string.launcher_app_details_title, R.string.launcher_app_details_summary, KEY_OPEN_APP_DETAILS),
+                boolItem(R.string.launcher_disable_recents_previous_page_title, R.string.launcher_disable_recents_previous_page_summary, KEY_DISABLE_PREV_RECENTS),
+                boolItem(R.string.launcher_replace_lock_title, R.string.launcher_replace_lock_summary, KEY_REPLACE_LOCK))));
         chain.add(new SwitchWidgetAdapter(List.of(recentsButtonColorSwitch())));
         if (ObsidianPrefs.getBoolean(KEY_RECENTS_BTN_COLOR + "_on", false)) {
             chain.add(recentsButtonColorPickerRow());
@@ -143,7 +147,7 @@ public class LauncherFragment extends Fragment {
         chain.add(sliderRow(getString(R.string.launcher_columns), KEY_LAUNCHER_COLUMNS, 4, 8, 4, false));
         chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4, false));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItemWithNote(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS),
+                boolItem(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS),
                 boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS, false))));
 
         // ── Folder Layout ────────────────────────────────────────────────────
@@ -154,7 +158,7 @@ public class LauncherFragment extends Fragment {
         chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3, false));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW, false),
-                boolItemWithNote(R.string.remove_folder_pagination_title, (Integer) null, KEY_REMOVE_FOLDER_PAGE))));
+                boolItem(R.string.remove_folder_pagination_title, null, KEY_REMOVE_FOLDER_PAGE))));
 
         // ── Drawer ───────────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.drawer))));
@@ -162,7 +166,7 @@ public class LauncherFragment extends Fragment {
                 boolItem(R.string.launcher_drawer_edit_columns, null, KEY_REARRANGE_DRAWER, false))));
         chain.add(sliderRow(getString(R.string.drawer_columns), KEY_DRAWER_COLUMNS, 3, 7, 4, false));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItemWithNote(R.string.hide_app_labels, R.string.hide_app_labels_drawer, KEY_DRAWER_HIDE_LABELS))));
+                boolItem(R.string.hide_app_labels, R.string.hide_app_labels_drawer, KEY_DRAWER_HIDE_LABELS))));
 
         // ── Dock background (sub-screen) ────────────────────────────────────
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
@@ -182,8 +186,8 @@ public class LauncherFragment extends Fragment {
         // ── Miscellaneous ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.misc_category))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItemWithNote(R.string.remove_home_pagination, (Integer) null, KEY_REMOVE_HOME_PAGE),
-                boolItemWithNote(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER))));
+                boolItem(R.string.remove_home_pagination, null, KEY_REMOVE_HOME_PAGE),
+                boolItem(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER))));
         chain.add(swipeRightRow());
 
         android.os.Parcelable scrollState = mRv.getLayoutManager() != null
@@ -204,7 +208,8 @@ public class LauncherFragment extends Fragment {
     private SwitchWidgetAdapter.SwitchItem recentsButtonColorSwitch() {
         boolean on = ObsidianPrefs.getBoolean(KEY_RECENTS_BTN_COLOR + "_on", false);
         SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
-                getString(R.string.launcher_recents_button_color_title), null, on, null);
+                getString(R.string.launcher_recents_button_color_title),
+                getString(R.string.launcher_recents_color_no_reboot), on, null);
         item.onChanged = () -> {
             ObsidianPrefs.putBoolean(KEY_RECENTS_BTN_COLOR + "_on", item.checked);
             if (item.checked) {
@@ -293,22 +298,6 @@ public class LauncherFragment extends Fragment {
 
     private SwitchWidgetAdapter.SwitchItem boolItem(int titleRes, Integer summaryRes, String key) {
         return boolItem(titleRes, summaryRes, key, true);
-    }
-
-    /** For real (implemented) launcher hooks — appends the "reboot required" note, since
-     *  applying a launcher-scope mod needs a full device reboot (force-stopping the Launcher
-     *  app is not enough), unlike every other Obsidian mod so far. */
-    private SwitchWidgetAdapter.SwitchItem boolItemWithNote(int titleRes, int summaryRes, String key) {
-        return boolItemWithNote(titleRes, (Integer) summaryRes, key);
-    }
-
-    private SwitchWidgetAdapter.SwitchItem boolItemWithNote(int titleRes, Integer summaryRes, String key) {
-        String base = summaryRes != null ? getString(summaryRes) : null;
-        String summary = (base != null ? base + "\n" : "") + getString(R.string.launcher_reboot_note);
-        SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
-                getString(titleRes), summary, ObsidianPrefs.getBoolean(key, false), null);
-        item.onChanged = () -> ObsidianPrefs.putBoolean(key, item.checked);
-        return item;
     }
 
     /** implemented=false appends a "coming soon" marker to the summary — the switch still
@@ -406,7 +395,7 @@ public class LauncherFragment extends Fragment {
     private ListWidgetAdapter swipeRightRow() {
         ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
                 getString(R.string.custom_swipe_right_behavior_title),
-                swipeRightSummary() + "\n" + getString(R.string.launcher_reboot_note),
+                swipeRightSummary(),
                 this::showSwipeRightDialog);
         return new ListWidgetAdapter(List.of(item));
     }
