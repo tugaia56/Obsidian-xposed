@@ -1,5 +1,6 @@
 package it.tugaia56.obsidian.xposed.hooks.launcher;
 
+import static de.robv.android.xposed.XposedBridge.hookAllConstructors;
 import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.callMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
@@ -26,11 +27,10 @@ import it.tugaia56.obsidian.xposed.XposedMods;
 
 /**
  * Real OC Launcher.java mechanism, ported one section at a time. So far: hide app labels
- * (Home/Drawer) and the full "Recenti" section — Apri Dettagli App (long-press),
- * Disabilita Pagina Recenti Precedente, Sostituisci Blocco (swipe-up-and-hold in Recents
- * kills the app instead of locking it). Rest of OC's Launcher.java (columns/rows, folder
- * layout, pagination, fast scroll, force-dock) is next, one at a time so each can be
- * tested in isolation.
+ * (Home/Drawer), the full "Recenti" section (Apri Dettagli App, Disabilita Pagina Recenti
+ * Precedente, Sostituisci Blocco), Rimuovi Impaginazione (Home + Cartelle) and Nascondi
+ * Scroller. Rest of OC's Launcher.java (columns/rows, folder/drawer rearrange, force-dock)
+ * is next, one at a time so each can be tested in isolation.
  */
 public class LauncherMod extends XposedMods {
 
@@ -39,12 +39,20 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_OPEN_APP_DETAILS     = "launcher_open_app_details";
     private static final String KEY_DISABLE_PREV_RECENTS = "disable_previous_recents";
     private static final String KEY_REPLACE_LOCK         = "replace_lock";
+    private static final String KEY_REMOVE_HOME_PAGE     = "remove_home_pagination";
+    private static final String KEY_REMOVE_FOLDER_PAGE   = "remove_folder_pagination";
+    private static final String KEY_HIDE_SCROLLER        = "hide_scroller";
 
     private boolean mHideDesktopLabels = false;
     private boolean mHideDrawerLabels  = false;
     private boolean mOpenAppDetails       = false;
     private boolean mDisablePrevRecents   = false;
     private boolean mReplaceLock          = false;
+    private boolean mRemoveHomePagination   = false;
+    private boolean mRemoveFolderPagination = false;
+    private boolean mHideScroller           = false;
+
+    private View mFastScrollView;
 
     public LauncherMod(Context context) {
         super(context);
@@ -58,6 +66,13 @@ public class LauncherMod extends XposedMods {
         mOpenAppDetails      = Xprefs.getBoolean(KEY_OPEN_APP_DETAILS, false);
         mDisablePrevRecents  = Xprefs.getBoolean(KEY_DISABLE_PREV_RECENTS, false);
         mReplaceLock         = Xprefs.getBoolean(KEY_REPLACE_LOCK, false);
+        mRemoveHomePagination   = Xprefs.getBoolean(KEY_REMOVE_HOME_PAGE, false);
+        mRemoveFolderPagination = Xprefs.getBoolean(KEY_REMOVE_FOLDER_PAGE, false);
+        mHideScroller           = Xprefs.getBoolean(KEY_HIDE_SCROLLER, false);
+
+        if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
+            updateFastScroll();
+        }
     }
 
     @Override
@@ -66,6 +81,8 @@ public class LauncherMod extends XposedMods {
         hookOpenAppDetails(lpparam);
         hookDisablePreviousRecents(lpparam);
         hookReplaceLock(lpparam);
+        hookRemovePagination(lpparam);
+        hookHideScroller(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -316,6 +333,88 @@ public class LauncherMod extends XposedMods {
         } catch (Throwable t) {
             log("forceStopPackage: su fallback failed: " + t);
         }
+    }
+
+    // ── Rimuovi Impaginazione (Home + Cartelle, stesso hook per entrambe come in OC) ──────
+    private void hookRemovePagination(XC_LoadPackage.LoadPackageParam lpparam) {
+        XC_MethodHook pageIndicatorHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!mRemoveHomePagination && !mRemoveFolderPagination) return;
+                View v = (View) param.thisObject;
+                if (v.getParent() == null) return;
+                String parentClass = v.getParent().getClass().getCanonicalName();
+                if (parentClass == null) return;
+                if (parentClass.equals("com.android.launcher3.OplusDragLayer")) {
+                    if (mRemoveHomePagination) {
+                        v.setVisibility(View.GONE);
+                        param.setResult(null);
+                    }
+                } else if (parentClass.equals("android.widget.FrameLayout")) {
+                    if (mRemoveFolderPagination) {
+                        v.setVisibility(View.GONE);
+                        param.setResult(null);
+                    }
+                }
+            }
+        };
+        try {
+            Class<?> pageIndicator = findClass("com.android.launcher.pageindicators.OplusPageIndicator", lpparam.classLoader);
+            hookAllMethods(pageIndicator, "dispatchDraw", pageIndicatorHook);
+            hookAllMethods(pageIndicator, "onDraw", pageIndicatorHook);
+        } catch (Throwable t) {
+            log("OplusPageIndicator not found: " + t);
+        }
+
+        try {
+            Class<?> touchHelper = findClass("com.android.launcher.pageindicators.PageIndicatorTouchHelper", lpparam.classLoader);
+            hookAllMethods(touchHelper, "dispatchTouchEvent", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mRemoveHomePagination) param.setResult(false);
+                }
+            });
+        } catch (Throwable t) {
+            log("PageIndicatorTouchHelper not found: " + t);
+        }
+    }
+
+    // ── Nascondi Scroller (barra a lettere del Drawer) ──────────────────────
+    private void hookHideScroller(XC_LoadPackage.LoadPackageParam lpparam) {
+        // Class name changed across OOS versions — try both, whichever exists on this ROM.
+        String[] candidates = {
+                "com.android.launcher3.allapps.OplusFastScrollLayout", // OOS 14-15
+                "com.android.launcher3.allapps.LetterIndexFastScrollHelper" // OOS 13
+        };
+        for (String className : candidates) {
+            try {
+                Class<?> fastScrollClass = findClass(className, lpparam.classLoader);
+                hookAllConstructors(fastScrollClass, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (className.endsWith("LetterIndexFastScrollHelper")) {
+                                mFastScrollView = (View) getObjectField(param.thisObject, "mFastScroll");
+                            } else {
+                                mFastScrollView = (View) param.thisObject;
+                            }
+                            updateFastScroll();
+                        } catch (Throwable t) {
+                            log("hookHideScroller construction failed: " + t);
+                        }
+                    }
+                });
+                return; // found one candidate, no need to try the other
+            } catch (Throwable ignored) {
+                // try next candidate
+            }
+        }
+        log("No fast-scroll class found on this ROM — Nascondi Scroller has no effect here");
+    }
+
+    private void updateFastScroll() {
+        if (mFastScrollView == null) return;
+        mFastScrollView.setVisibility(mHideScroller ? View.GONE : View.VISIBLE);
     }
 
     @Override

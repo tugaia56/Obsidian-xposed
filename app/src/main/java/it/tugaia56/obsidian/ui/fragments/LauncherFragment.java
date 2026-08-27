@@ -148,7 +148,7 @@ public class LauncherFragment extends Fragment {
         chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3, false));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW, false),
-                boolItem(R.string.remove_folder_pagination_title, null, KEY_REMOVE_FOLDER_PAGE, false))));
+                boolItemWithNote(R.string.remove_folder_pagination_title, (Integer) null, KEY_REMOVE_FOLDER_PAGE))));
 
         // ── Drawer ───────────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.drawer))));
@@ -176,8 +176,8 @@ public class LauncherFragment extends Fragment {
         // ── Miscellaneous ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.misc_category))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.remove_home_pagination, null, KEY_REMOVE_HOME_PAGE, false),
-                boolItem(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER, false))));
+                boolItemWithNote(R.string.remove_home_pagination, (Integer) null, KEY_REMOVE_HOME_PAGE),
+                boolItemWithNote(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER))));
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
                 R.drawable.ic_mods_tools,
                 getString(R.string.custom_swipe_right_behavior_title),
@@ -298,7 +298,12 @@ public class LauncherFragment extends Fragment {
      *  applying a launcher-scope mod needs a full device reboot (force-stopping the Launcher
      *  app is not enough), unlike every other Obsidian mod so far. */
     private SwitchWidgetAdapter.SwitchItem boolItemWithNote(int titleRes, int summaryRes, String key) {
-        String summary = getString(summaryRes) + "\n" + getString(R.string.launcher_reboot_note);
+        return boolItemWithNote(titleRes, (Integer) summaryRes, key);
+    }
+
+    private SwitchWidgetAdapter.SwitchItem boolItemWithNote(int titleRes, Integer summaryRes, String key) {
+        String base = summaryRes != null ? getString(summaryRes) : null;
+        String summary = (base != null ? base + "\n" : "") + getString(R.string.launcher_reboot_note);
         SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
                 getString(titleRes), summary, ObsidianPrefs.getBoolean(key, false), null);
         item.onChanged = () -> ObsidianPrefs.putBoolean(key, item.checked);
