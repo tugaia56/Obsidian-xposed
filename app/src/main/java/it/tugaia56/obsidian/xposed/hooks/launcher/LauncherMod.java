@@ -276,18 +276,45 @@ public class LauncherMod extends XposedMods {
     }
 
     private void killTaskPackage(Object taskView, Object task) {
+        String packageName;
         try {
-            String packageName = (String) callMethod(task, "getPackageName");
+            packageName = (String) callMethod(task, "getPackageName");
+        } catch (Throwable t) {
+            log("killTaskPackage: getPackageName failed: " + t);
+            return;
+        }
+
+        try {
+            int accessibilityCloseId = mContext.getResources()
+                    .getIdentifier("accessibility_close", "string", LAUNCHER);
+            callMethod(taskView, "performAccessibilityAction", accessibilityCloseId, null);
+        } catch (Throwable t) {
+            log("killTaskPackage: dismiss card failed: " + t);
+        }
+        Toast.makeText(mContext, "App Killed", Toast.LENGTH_SHORT).show();
+
+        // Actual kill happens off the touch-handling thread — forceStopPackageAsUser needs
+        // FORCE_STOP_PACKAGES, which this launcher's priv-app whitelist doesn't grant on every
+        // ROM (confirmed via SecurityException on this device); su fallback covers that case.
+        final String pkg = packageName;
+        new Thread(() -> forceStopPackage(pkg)).start();
+    }
+
+    private void forceStopPackage(String packageName) {
+        try {
             callMethod(mContext.getSystemService(Context.ACTIVITY_SERVICE),
                     "forceStopPackageAsUser",
                     packageName,
                     callMethod(Process.myUserHandle(), "getIdentifier"));
-            int accessibilityCloseId = mContext.getResources()
-                    .getIdentifier("accessibility_close", "string", LAUNCHER);
-            callMethod(taskView, "performAccessibilityAction", accessibilityCloseId, null);
-            Toast.makeText(mContext, "App Killed", Toast.LENGTH_SHORT).show();
+            return;
+        } catch (Throwable ignored) {
+            // Expected when the launcher doesn't hold FORCE_STOP_PACKAGES — fall through to su.
+        }
+        try {
+            java.lang.Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "am force-stop " + packageName});
+            p.waitFor();
         } catch (Throwable t) {
-            log("killTaskPackage failed: " + t);
+            log("forceStopPackage: su fallback failed: " + t);
         }
     }
 
