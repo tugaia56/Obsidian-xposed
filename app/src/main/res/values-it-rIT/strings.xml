@@ -356,6 +356,7 @@
     <string name="dock_background_amount">Livello sfocatura</string>
     <string name="dock_background_radius">Raggio sfondo</string>
     <string name="launcher_recents">Recenti</string>
+    <string name="launcher_reboot_note">Le mod del Launcher richiedono il riavvio del telefono per essere applicate — non basta forzare l\'arresto dell\'app Launcher</string>
     <string name="launcher_recents_button_color_title">Colore Pulsante Recenti</string>
     <string name="launcher_app_details_title">Apri dettagli app</string>
     <string name="launcher_app_details_summary">Tocca l\'icona dell\'app per aprire i dettagli in Impostazioni</string>

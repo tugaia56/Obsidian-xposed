@@ -359,6 +359,7 @@
     <string name="dock_background_amount">Blur amount</string>
     <string name="dock_background_radius">Background radius</string>
     <string name="launcher_recents">Recents</string>
+    <string name="launcher_reboot_note">Launcher mods need a device reboot to apply — force-stopping the Launcher app is not enough</string>
     <string name="launcher_recents_button_color_title">Recents Button Color</string>
     <string name="launcher_app_details_title">Open App Details</string>
     <string name="launcher_app_details_summary">Tap on the app icon to open app details in Settings</string>
