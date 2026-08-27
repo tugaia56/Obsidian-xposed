@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4.3.1
         with:
           name: "Obsidian_${{ env.VTag }}"
-          path: app/build/outputs/apk/release/Obsidian-release.apk
+          path: app/build/outputs/apk/release/${{ env.ApkName }}
 
       - name: Version Bump Commit
         uses: github-actions-x/commit@v2.9
@@ -75,11 +75,16 @@ jobs:
           prerelease: false
           allowUpdates: false
           draft: false
-          artifacts: 'app/build/outputs/apk/release/Obsidian-release.apk'
+          artifacts: 'app/build/outputs/apk/release/${{ env.ApkName }}'
 
       - name: Telegram Group Post
         if: ${{ success() && vars.HAS_TELEGRAM_SECRETS == 'true' }}
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_TK }}
+          TG_CHAT: ${{ secrets.OBSIDIAN_GROUP }}
         run: |
           curl -X POST \
-            -H 'Content-Type: application/json' \
-            -d '{"chat_id": ${{ secrets.OBSIDIAN_GROUP }}, "text": "'"$(cat telegram.msg)"'", "parse_mode": "Markdown", "reply_markup": {"inline_keyboard": [[{"text":"Download", "url": "https://www.github.com/tugaia56/Obsidian-xposed/releases/download/${{ env.VTag }}/Obsidian-release.apk"}]]}' https://api.telegram.org/bot${{ secrets.TELEGRAM_TK }}/sendMessage
+            -F "chat_id=$TG_CHAT" \
+            -F "caption=$(cat telegram.msg)" \
+            -F "document=@app/build/outputs/apk/release/${{ env.ApkName }}" \
+            "https://api.telegram.org/bot$TG_TOKEN/sendDocument"

@@ -68,12 +68,14 @@ android {
         jniLibs.useLegacyPackaging = true
     }
 
-    // Rename output APK from app-debug.apk / app-release.apk to Obsidian-debug.apk / Obsidian-release.apk
+    // Rename output APK from app-debug.apk / app-release.apk to Obsidian-debug.apk / Obsidian-release-<version>.apk
+    // (debug stays unversioned — reinstall.bat/the "reinstall" task below reference it by that fixed name)
     applicationVariants.all {
         val variant = this
+        val suffix = if (variant.name == "release") "-${variant.versionName}" else ""
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "Obsidian-${variant.name}.apk"
+            output.outputFileName = "Obsidian-${variant.name}$suffix.apk"
         }
     }
 }
