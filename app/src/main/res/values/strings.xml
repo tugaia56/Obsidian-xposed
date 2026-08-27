@@ -374,6 +374,7 @@
     <string name="alternative_themed_icons_title">Alternative themed icons</string>
     <string name="alternative_themed_icons_summary">Use alternative method to theme icons</string>
     <string name="themed_icons_where_switch">Custom themed icons map</string>
+    <string name="themed_icons_where_switch_summary">Choose where themed icons should be applied</string>
     <string name="themed_icons_where_title">Select where to apply themed icons</string>
     <string name="themed_icons_workspace">Workspace</string>
     <string name="themed_icons_drawer">Drawer</string>

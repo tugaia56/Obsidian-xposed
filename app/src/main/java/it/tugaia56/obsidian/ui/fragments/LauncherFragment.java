@@ -72,6 +72,7 @@ public class LauncherFragment extends Fragment {
     private static final String KEY_FORCE_THEMED_ICONS    = "force_themed_launcher_icons";
     private static final String KEY_ALT_MONOCHROME        = "alternative_monochrome";
     private static final String KEY_CUSTOM_THEMED_WHERE   = "custom_themed_icons_where";
+    private static final String KEY_CUSTOM_ICON_MAP_ENABLED = "themed_icons_where_enabled";
 
     private static final String KEY_REMOVE_HOME_PAGE      = "remove_home_pagination";
     private static final String KEY_HIDE_SCROLLER         = "hide_scroller";
@@ -181,7 +182,10 @@ public class LauncherFragment extends Fragment {
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS),
                 boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME))));
-        chain.add(themedIconsWhereRow());
+        chain.add(new SwitchWidgetAdapter(List.of(customIconMapSwitch())));
+        if (ObsidianPrefs.getBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, false)) {
+            chain.add(themedIconsWhereRow());
+        }
 
         // ── Miscellaneous ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.misc_category))));
@@ -327,6 +331,20 @@ public class LauncherFragment extends Fragment {
         return new SliderWidgetAdapter(List.of(item));
     }
 
+    /** Gate switch — the "where to apply" picker row only shows (and only has any effect)
+     *  while this is on, matching OC's actual two-pref design. */
+    private SwitchWidgetAdapter.SwitchItem customIconMapSwitch() {
+        boolean on = ObsidianPrefs.getBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, false);
+        SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
+                getString(R.string.themed_icons_where_switch),
+                getString(R.string.themed_icons_where_switch_summary), on, null);
+        item.onChanged = () -> {
+            ObsidianPrefs.putBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, item.checked);
+            rebuild();
+        };
+        return item;
+    }
+
     /** Multi-select dialog for "where to apply themed icons" (workspace/drawer/folder/search/taskbar). */
     private ListWidgetAdapter themedIconsWhereRow() {
         String[] entries = {
@@ -336,7 +354,7 @@ public class LauncherFragment extends Fragment {
         };
         final ListWidgetAdapter[] adapterRef = new ListWidgetAdapter[1];
         ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
-                getString(R.string.themed_icons_where_switch),
+                getString(R.string.themed_icons_where_title),
                 themedIconsWhereSummary(entries),
                 () -> showThemedIconsWhereDialog(entries, adapterRef[0]));
         ListWidgetAdapter adapter = new ListWidgetAdapter(List.of(item));

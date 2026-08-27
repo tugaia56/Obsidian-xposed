@@ -371,6 +371,7 @@
     <string name="alternative_themed_icons_title">Icone a tema alternative</string>
     <string name="alternative_themed_icons_summary">Utilizza un metodo alternativo per applicare temi alle icone</string>
     <string name="themed_icons_where_switch">Mappa personalizzata delle icone a tema</string>
+    <string name="themed_icons_where_switch_summary">Scegli dove applicare le icone a tema</string>
     <string name="themed_icons_where_title">Seleziona dove applicare le icone a tema</string>
     <string name="themed_icons_workspace">Schermata home</string>
     <string name="themed_icons_drawer">Drawer</string>

@@ -59,6 +59,7 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_FORCE_THEMED_ICONS   = "force_themed_launcher_icons";
     private static final String KEY_ALT_MONOCHROME       = "alternative_monochrome";
     private static final String KEY_THEMED_ICONS_WHERE   = "custom_themed_icons_where"; // comma-separated indices, matches LauncherFragment's format
+    private static final String KEY_CUSTOM_ICON_MAP_ENABLED = "themed_icons_where_enabled";
 
     private static final int DISPLAY_WORKSPACE           = 0;
     private static final int DISPLAY_ALL_APPS            = 1;
@@ -79,6 +80,7 @@ public class LauncherMod extends XposedMods {
     private int mShelfBehavior              = 2; // SHELF_STOCK — matches default when disabled
     private boolean mForceThemedIcons  = false;
     private boolean mAlternativeMono   = false;
+    private boolean mAllowCustomIconMap = false;
     private boolean mWorkspaceMonochrome = true;
     private boolean mDrawerMonochrome    = true;
     private boolean mFolderMonochrome    = true;
@@ -108,6 +110,7 @@ public class LauncherMod extends XposedMods {
 
         mForceThemedIcons = Xprefs.getBoolean(KEY_FORCE_THEMED_ICONS, false);
         mAlternativeMono  = Xprefs.getBoolean(KEY_ALT_MONOCHROME, false);
+        mAllowCustomIconMap = Xprefs.getBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, false);
         Set<String> where = parseThemedIconsWhere(Xprefs.getString(KEY_THEMED_ICONS_WHERE, "0,1,2,3,4"));
         mWorkspaceMonochrome = where.contains("0");
         mDrawerMonochrome    = where.contains("1");
@@ -580,12 +583,14 @@ public class LauncherMod extends XposedMods {
 
         // Dove applicare le icone a tema — indipendente da Forza/Alternativa, controlla solo se
         // il tema (quando già disponibile nativamente) viene applicato in ciascuna superficie.
+        // Gated by "Mappa Personalizzata" (mAllowCustomIconMap) — off by default, matching OC.
         try {
             Class<?> bubbleTextView = findClass("com.android.launcher3.OplusBubbleTextView", cl);
             hookAllMethods(bubbleTextView, "applyIconAndLabel", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
+                        if (!mAllowCustomIconMap) return;
                         Object itemInfoWithIcon = param.args[0];
                         if (itemInfoWithIcon == null) return;
                         boolean alreadyEdited = getBooleanField(itemInfoWithIcon, "mIsIconEdited");
