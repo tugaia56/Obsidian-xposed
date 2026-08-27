@@ -385,6 +385,9 @@
     <string name="hide_scroller_summary">Hide scroller in app drawer</string>
     <string name="custom_swipe_right_behavior_title">Custom swipe right behavior</string>
     <string name="custom_swipe_right_behavior_summary">Customize the behavior when you swipe right on home screen</string>
+    <string name="swipe_right_enable_discover">Discover (default)</string>
+    <string name="swipe_right_disable_discover">Disable Discover</string>
+    <string name="swipe_right_replace_discover">Replace Discover with Shelf</string>
     <string name="nav_statusbar">Status Bar</string>
     <string name="nav_statusbar_summary">Icons, Clock, Notifications, Dialog</string>
 

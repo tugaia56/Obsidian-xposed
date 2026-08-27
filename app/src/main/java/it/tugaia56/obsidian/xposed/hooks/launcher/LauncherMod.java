@@ -9,6 +9,7 @@ import static de.robv.android.xposed.XposedHelpers.getIntField;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.getStaticIntField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
+import static de.robv.android.xposed.XposedHelpers.setBooleanField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
 import static it.tugaia56.obsidian.xposed.XPrefs.Xprefs;
 
@@ -28,9 +29,10 @@ import it.tugaia56.obsidian.xposed.XposedMods;
 /**
  * Real OC Launcher.java mechanism, ported one section at a time. So far: hide app labels
  * (Home/Drawer), the full "Recenti" section (Apri Dettagli App, Disabilita Pagina Recenti
- * Precedente, Sostituisci Blocco), Rimuovi Impaginazione (Home + Cartelle) and Nascondi
- * Scroller. Rest of OC's Launcher.java (columns/rows, folder/drawer rearrange, force-dock)
- * is next, one at a time so each can be tested in isolation.
+ * Precedente, Sostituisci Blocco), Rimuovi Impaginazione (Home + Cartelle), Nascondi
+ * Scroller, and Comportamento Personalizzato Swipe Destro (Discover/Shelf panel). Rest of
+ * OC's Launcher.java (columns/rows, folder/drawer rearrange, force-dock) is next, one at a
+ * time so each can be tested in isolation.
  */
 public class LauncherMod extends XposedMods {
 
@@ -42,6 +44,8 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_REMOVE_HOME_PAGE     = "remove_home_pagination";
     private static final String KEY_REMOVE_FOLDER_PAGE   = "remove_folder_pagination";
     private static final String KEY_HIDE_SCROLLER        = "hide_scroller";
+    private static final String KEY_SWIPE_RIGHT_ENABLED  = "launcher_custom_shelf_switch";
+    private static final String KEY_SWIPE_RIGHT_MODE     = "laucher_shelf_custom"; // matches OC/UI exactly
 
     private boolean mHideDesktopLabels = false;
     private boolean mHideDrawerLabels  = false;
@@ -51,6 +55,8 @@ public class LauncherMod extends XposedMods {
     private boolean mRemoveHomePagination   = false;
     private boolean mRemoveFolderPagination = false;
     private boolean mHideScroller           = false;
+    private boolean mCustomShelfBehavior    = false;
+    private int mShelfBehavior              = 2; // SHELF_STOCK — matches default when disabled
 
     private View mFastScrollView;
 
@@ -69,6 +75,8 @@ public class LauncherMod extends XposedMods {
         mRemoveHomePagination   = Xprefs.getBoolean(KEY_REMOVE_HOME_PAGE, false);
         mRemoveFolderPagination = Xprefs.getBoolean(KEY_REMOVE_FOLDER_PAGE, false);
         mHideScroller           = Xprefs.getBoolean(KEY_HIDE_SCROLLER, false);
+        mCustomShelfBehavior    = Xprefs.getBoolean(KEY_SWIPE_RIGHT_ENABLED, false);
+        mShelfBehavior          = Xprefs.getInt(KEY_SWIPE_RIGHT_MODE, 2);
 
         if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
             updateFastScroll();
@@ -83,6 +91,7 @@ public class LauncherMod extends XposedMods {
         hookReplaceLock(lpparam);
         hookRemovePagination(lpparam);
         hookHideScroller(lpparam);
+        hookSwipeRightBehavior(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -415,6 +424,45 @@ public class LauncherMod extends XposedMods {
     private void updateFastScroll() {
         if (mFastScrollView == null) return;
         mFastScrollView.setVisibility(mHideScroller ? View.GONE : View.VISIBLE);
+    }
+
+    // ── Comportamento Personalizzato Swipe Destro (pannello Discover/Shelf) ─────────────────
+    private void hookSwipeRightBehavior(XC_LoadPackage.LoadPackageParam lpparam) {
+        try {
+            Class<?> overlayProxy = findClass("com.android.overlay.OverlayProxy", lpparam.classLoader);
+            hookAllMethods(overlayProxy, "getAssistScreenType", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mCustomShelfBehavior) param.setResult(mShelfBehavior);
+                }
+            });
+            hookAllMethods(overlayProxy, "setAssistScreenType", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mCustomShelfBehavior) param.args[0] = mShelfBehavior;
+                }
+            });
+        } catch (Throwable t) {
+            log("OverlayProxy not found: " + t);
+        }
+
+        try {
+            Class<?> featureOption = findClass("com.android.common.config.FeatureOption", lpparam.classLoader);
+            hookAllMethods(featureOption, "getSShelfAssistantEnable", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mCustomShelfBehavior) param.setResult(mShelfBehavior == 0);
+                }
+            });
+            hookAllMethods(featureOption, "updateSupportShelfAssistant", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mCustomShelfBehavior) setBooleanField(param.thisObject, "sShelfAssistantEnable", mShelfBehavior == 0);
+                }
+            });
+        } catch (Throwable t) {
+            log("FeatureOption not found: " + t);
+        }
     }
 
     @Override

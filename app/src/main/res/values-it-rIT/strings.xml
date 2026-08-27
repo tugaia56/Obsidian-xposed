@@ -382,6 +382,9 @@
     <string name="hide_scroller_summary">Nascondi scroller nel drawer delle app</string>
     <string name="custom_swipe_right_behavior_title">Comportamento personalizzato swipe destro</string>
     <string name="custom_swipe_right_behavior_summary">Personalizza il comportamento quando scorri verso destra sulla home</string>
+    <string name="swipe_right_enable_discover">Discover (predefinito)</string>
+    <string name="swipe_right_disable_discover">Disattiva Discover</string>
+    <string name="swipe_right_replace_discover">Sostituisci Discover con Shelf</string>
     <string name="nav_statusbar">Barra di Stato</string>
     <string name="nav_statusbar_summary">Icone, orologio, notifiche, Dialogo</string>
 

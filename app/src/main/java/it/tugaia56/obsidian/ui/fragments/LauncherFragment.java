@@ -75,6 +75,12 @@ public class LauncherFragment extends Fragment {
     private static final String KEY_REMOVE_HOME_PAGE      = "remove_home_pagination";
     private static final String KEY_HIDE_SCROLLER         = "hide_scroller";
 
+    private static final String KEY_SWIPE_RIGHT_ENABLED = "launcher_custom_shelf_switch";
+    private static final String KEY_SWIPE_RIGHT_MODE    = "laucher_shelf_custom"; // pref key matches OC exactly (typo included)
+    private static final int SHELF_DISABLE_DISCOVER = 0;
+    private static final int SHELF_REPLACE_DISCOVER = 1;
+    private static final int SHELF_STOCK            = 2;
+
     private static final String KEY_RECENTS_BTN_COLOR = "LAUNCHER_RECENTS_BTN_COLOR";
 
     // Fabricated overlay names — color resource (OOS16) + the two OOS15 drawable
@@ -178,12 +184,7 @@ public class LauncherFragment extends Fragment {
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItemWithNote(R.string.remove_home_pagination, (Integer) null, KEY_REMOVE_HOME_PAGE),
                 boolItemWithNote(R.string.hide_scroller, R.string.hide_scroller_summary, KEY_HIDE_SCROLLER))));
-        chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
-                R.drawable.ic_mods_tools,
-                getString(R.string.custom_swipe_right_behavior_title),
-                getString(R.string.custom_swipe_right_behavior_summary),
-                () -> navigate(new WipFragment(), getString(R.string.custom_swipe_right_behavior_title)),
-                ACCENT_DOCK))));
+        chain.add(swipeRightRow());
 
         android.os.Parcelable scrollState = mRv.getLayoutManager() != null
                 ? mRv.getLayoutManager().onSaveInstanceState() : null;
@@ -394,6 +395,51 @@ public class LauncherFragment extends Fragment {
                     ObsidianPrefs.putString(KEY_CUSTOM_THEMED_WHERE, sb.toString());
                     adapter.getItems().get(0).valueSummary = themedIconsWhereSummary(entries);
                     adapter.notifyItemChanged(0);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show());
+    }
+
+    /** Collapses OC's separate enable-switch + 3-way radio group into a single single-choice
+     *  dialog — any explicit pick sets [[KEY_SWIPE_RIGHT_ENABLED]]=true, matching what "Discover
+     *  (default)" already behaves like when the switch is off, so there's no separate off state. */
+    private ListWidgetAdapter swipeRightRow() {
+        ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
+                getString(R.string.custom_swipe_right_behavior_title),
+                swipeRightSummary() + "\n" + getString(R.string.launcher_reboot_note),
+                this::showSwipeRightDialog);
+        return new ListWidgetAdapter(List.of(item));
+    }
+
+    private String swipeRightSummary() {
+        int mode = ObsidianPrefs.getBoolean(KEY_SWIPE_RIGHT_ENABLED, false)
+                ? ObsidianPrefs.getInt(KEY_SWIPE_RIGHT_MODE, SHELF_STOCK) : SHELF_STOCK;
+        switch (mode) {
+            case SHELF_DISABLE_DISCOVER: return getString(R.string.swipe_right_disable_discover);
+            case SHELF_REPLACE_DISCOVER: return getString(R.string.swipe_right_replace_discover);
+            default: return getString(R.string.swipe_right_enable_discover);
+        }
+    }
+
+    private void showSwipeRightDialog() {
+        String[] entries = {
+                getString(R.string.swipe_right_enable_discover),
+                getString(R.string.swipe_right_disable_discover),
+                getString(R.string.swipe_right_replace_discover)
+        };
+        int[] values = { SHELF_STOCK, SHELF_DISABLE_DISCOVER, SHELF_REPLACE_DISCOVER };
+        int current = ObsidianPrefs.getBoolean(KEY_SWIPE_RIGHT_ENABLED, false)
+                ? ObsidianPrefs.getInt(KEY_SWIPE_RIGHT_MODE, SHELF_STOCK) : SHELF_STOCK;
+        int checkedIndex = 0;
+        for (int i = 0; i < values.length; i++) if (values[i] == current) checkedIndex = i;
+
+        ObsidianTheme.themeDialog(new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.custom_swipe_right_behavior_title)
+                .setSingleChoiceItems(entries, checkedIndex, (d, which) -> {
+                    ObsidianPrefs.putBoolean(KEY_SWIPE_RIGHT_ENABLED, true);
+                    ObsidianPrefs.putInt(KEY_SWIPE_RIGHT_MODE, values[which]);
+                    d.dismiss();
+                    rebuild();
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show());
