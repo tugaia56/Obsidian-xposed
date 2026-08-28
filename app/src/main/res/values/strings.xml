@@ -734,6 +734,15 @@
     <string name="settings_auto_update_summary">Periodically check for new versions</string>
     <string name="settings_update_wifi_only">Wi-Fi Only</string>
     <string name="settings_update_wifi_only_summary">Only check for updates on Wi-Fi</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_up_to_date">You\'re up to date</string>
+    <string name="update_no_apk_asset">Release found but has no APK attached</string>
+    <string name="update_check_failed">Check failed — verify your connection</string>
+    <string name="update_available_title">New version available</string>
+    <string name="update_available_body">Version %1$s is available.</string>
+    <string name="update_word">Update</string>
+    <string name="update_download_started">Download started</string>
+    <string name="update_download_failed">Download failed</string>
 
     <string name="settings_github">GitHub Repository</string>
     <string name="settings_github_summary">Project source code</string>

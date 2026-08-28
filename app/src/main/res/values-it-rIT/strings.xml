@@ -735,6 +735,15 @@
     <string name="settings_auto_update_summary">Controlla periodicamente nuove versioni</string>
     <string name="settings_update_wifi_only">Solo Wi-Fi</string>
     <string name="settings_update_wifi_only_summary">Aggiorna solo in connessione Wi-Fi</string>
+    <string name="update_checking">Controllo aggiornamenti…</string>
+    <string name="update_up_to_date">Sei già aggiornato</string>
+    <string name="update_no_apk_asset">Release trovata ma senza APK allegato</string>
+    <string name="update_check_failed">Controllo fallito — verifica la connessione</string>
+    <string name="update_available_title">Nuova versione disponibile</string>
+    <string name="update_available_body">Versione %1$s disponibile.</string>
+    <string name="update_word">Aggiorna</string>
+    <string name="update_download_started">Download avviato</string>
+    <string name="update_download_failed">Download non riuscito</string>
 
     <string name="settings_github">Repository GitHub</string>
     <string name="settings_github_summary">Codice sorgente del progetto</string>
