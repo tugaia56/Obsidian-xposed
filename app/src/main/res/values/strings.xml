@@ -355,7 +355,9 @@
     <string name="launcher_drawer_edit_columns">Edit columns</string>
     <string name="drawer_columns">Columns</string>
     <string name="dock_background">Dock background</string>
+    <string name="dock_background_summary">Use one at a time — this takes priority over Material if both are on</string>
     <string name="dock_background_material">Material dock background</string>
+    <string name="dock_background_material_summary">Use one at a time — ignored if Dock Background above is also on</string>
     <string name="dock_background_amount">Blur amount</string>
     <string name="dock_background_radius">Background radius</string>
     <string name="launcher_recents">Recents</string>

@@ -48,8 +48,8 @@ public class LauncherDockBackgroundFragment extends Fragment {
         RecyclerView rv = (RecyclerView) view;
 
         SwitchWidgetAdapter toggles = new SwitchWidgetAdapter(List.of(
-                boolItem(getString(R.string.dock_background), KEY_DOCK_BG),
-                boolItem(getString(R.string.dock_background_material), KEY_DOCK_BG_MATERIAL)));
+                boolItem(getString(R.string.dock_background), getString(R.string.dock_background_summary), KEY_DOCK_BG),
+                boolItem(getString(R.string.dock_background_material), getString(R.string.dock_background_material_summary), KEY_DOCK_BG_MATERIAL)));
 
         SliderWidgetAdapter amount = sliderRow(getString(R.string.dock_background_amount), KEY_DOCK_BG_AMOUNT, 0, 4, 0);
         SliderWidgetAdapter radius = sliderRow(getString(R.string.dock_background_radius), KEY_DOCK_BG_RADIUS, 0, 100, 30);
@@ -57,9 +57,9 @@ public class LauncherDockBackgroundFragment extends Fragment {
         rv.setAdapter(new ConcatAdapter(toggles, amount, radius));
     }
 
-    private SwitchWidgetAdapter.SwitchItem boolItem(String title, String key) {
+    private SwitchWidgetAdapter.SwitchItem boolItem(String title, String summary, String key) {
         SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
-                title, null, ObsidianPrefs.getBoolean(key, false), null);
+                title, summary, ObsidianPrefs.getBoolean(key, false), null);
         item.onChanged = () -> ObsidianPrefs.putBoolean(key, item.checked);
         return item;
     }
