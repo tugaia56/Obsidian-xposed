@@ -69,6 +69,7 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_REARRANGE_HOME = "rearrange_home";
     private static final String KEY_LAUNCHER_COLUMNS = "launcher_columns";
     private static final String KEY_LAUNCHER_ROWS    = "launcher_rows";
+    private static final String KEY_FORCE_DOCK_COLUMNS = "force_dock_as_columns";
     private static final String KEY_REARRANGE_DRAWER = "rearrange_drawer";
     private static final String KEY_DRAWER_COLUMNS   = "drawer_columns";
     private static final String KEY_REARRANGE_FOLDER   = "rearrange_folder";
@@ -101,6 +102,7 @@ public class LauncherMod extends XposedMods {
     private boolean mRearrangeHome = false;
     private int mMaxColumns = 5;
     private int mMaxRows = 6;
+    private boolean mForceDockColumns = false;
     private boolean mRearrangeDrawer = false;
     private int mDrawerColumns = 4;
     private boolean mRearrangeFolder = false;
@@ -137,6 +139,7 @@ public class LauncherMod extends XposedMods {
         mRearrangeHome = Xprefs.getBoolean(KEY_REARRANGE_HOME, false);
         mMaxColumns    = Xprefs.getInt(KEY_LAUNCHER_COLUMNS, 4);
         mMaxRows       = Xprefs.getInt(KEY_LAUNCHER_ROWS, 4);
+        mForceDockColumns = Xprefs.getBoolean(KEY_FORCE_DOCK_COLUMNS, false);
 
         mRearrangeDrawer = Xprefs.getBoolean(KEY_REARRANGE_DRAWER, false);
         mDrawerColumns   = Xprefs.getInt(KEY_DRAWER_COLUMNS, 4);
@@ -163,6 +166,7 @@ public class LauncherMod extends XposedMods {
         hookDockBackground(lpparam);
         hookDrawerColumns(lpparam);
         hookHomeLayout(lpparam);
+        hookForceDockColumns(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -794,6 +798,21 @@ public class LauncherMod extends XposedMods {
             });
         } catch (Throwable t) {
             log("ToggleBarLayoutAdapter not found: " + t);
+        }
+    }
+
+    // ── Forza Dock a Colonne (rimuove il limite di 5 icone nel dock) ────────────────────────
+    private void hookForceDockColumns(XC_LoadPackage.LoadPackageParam lpparam) {
+        try {
+            Class<?> featureOption = findClass("com.android.common.config.FeatureOption", lpparam.classLoader);
+            hookAllMethods(featureOption, "isDockerMax5", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mForceDockColumns) param.setResult(false);
+                }
+            });
+        } catch (Throwable t) {
+            log("hookForceDockColumns (isDockerMax5) failed: " + t);
         }
     }
 

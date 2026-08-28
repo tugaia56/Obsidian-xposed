@@ -147,7 +147,7 @@ public class LauncherFragment extends Fragment {
         chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS),
-                boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS, false))));
+                boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS))));
 
         // ── Folder Layout ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_folder_layout))));
