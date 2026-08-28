@@ -747,6 +747,11 @@
     <string name="settings_theme_compat_body">L\'interfaccia di Obsidian segue il Tema che scegli (Sistema/Chiaro/Scuro).\n\nAlcune mods che modificano l\'aspetto del sistema — Stile Notifiche, Stile Toast e Stile Dialogo — sono pensate e testate solo per il tema scuro. Quando il sistema Android è in tema chiaro si disattivano automaticamente, lasciando l\'aspetto stock di OOS invece di forzare uno stile pensato per lo scuro.\n\nTutte le altre mods (icone, navigazione, Always-On Display, ecc.) non sono interessate e continuano a funzionare indipendentemente dal tema di sistema.\n\nPer la migliore esperienza, tieni il tema di sistema del dispositivo su scuro.</string>
     <string name="settings_credits">Crediti</string>
     <string name="settings_credits_summary">Autori e librerie utilizzate</string>
+    <string name="credits_thanks">Ringraziamenti</string>
+    <string name="credits_libraries">Librerie</string>
+    <string name="credits_oc_summary">Base di partenza per gran parte delle mod portate (Launcher, QS, Dock, ecc.)</string>
+    <string name="credits_crdroid_summary">Pulse Controller — stili batteria</string>
+    <string name="credits_lsposed_summary">Il framework su cui gira tutto</string>
 
     <!-- System Colors (Impostazioni → Colori → Colore in primo piano) -->
     <string name="nav_system_colors">Colore Accento Sistema</string>

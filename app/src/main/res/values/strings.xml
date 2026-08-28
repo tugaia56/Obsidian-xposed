@@ -746,6 +746,11 @@
     <string name="settings_theme_compat_body">Obsidian\'s own interface follows the Tema you choose (System/Light/Dark).\n\nSome mods that restyle system elements — Notification Style, Toast Style, and Dialog Style — are designed and tested for dark mode only. When the Android system is in light mode they switch off automatically, leaving the stock OOS light appearance instead of forcing a dark-only style onto it.\n\nAll other mods (icons, navigation, Always-On Display, etc.) are unaffected and keep working regardless of the system theme.\n\nFor the best experience, keep your device\'s system theme set to dark.</string>
     <string name="settings_credits">Credits</string>
     <string name="settings_credits_summary">Authors and libraries used</string>
+    <string name="credits_thanks">Special Thanks</string>
+    <string name="credits_libraries">Libraries</string>
+    <string name="credits_oc_summary">Base for most of the ported mods (Launcher, QS, Dock, etc.)</string>
+    <string name="credits_crdroid_summary">Pulse Controller — battery styles</string>
+    <string name="credits_lsposed_summary">The framework everything runs on</string>
 
     <!-- System Colors (Settings → Colors → Foreground Color) -->
     <string name="nav_system_colors">Color Accent System</string>

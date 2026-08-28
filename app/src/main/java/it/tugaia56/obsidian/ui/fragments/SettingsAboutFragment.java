@@ -18,12 +18,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.List;
 
 import it.tugaia56.obsidian.R;
+import it.tugaia56.obsidian.ui.activity.MainActivity;
 import it.tugaia56.obsidian.ui.adapters.ListWidgetAdapter;
 import it.tugaia56.obsidian.utils.ObsidianTheme;
 
 /**
  * "Info" — GitHub/Support Group open the real links; Compatibilità Tema explains the
- * light/dark mod behaviour; Credits remains a placeholder.
+ * light/dark mod behaviour; Credits apre CreditsFragment (bozza, 2026-08-28).
  */
 public class SettingsAboutFragment extends Fragment {
 
@@ -83,7 +84,13 @@ public class SettingsAboutFragment extends Fragment {
                         this::showThemeCompatDialog),
                 new ListWidgetAdapter.ListItem(
                         getString(R.string.settings_credits),
-                        getString(R.string.settings_credits_summary), null)
+                        getString(R.string.settings_credits_summary),
+                        () -> {
+                            if (getActivity() instanceof MainActivity) {
+                                ((MainActivity) getActivity()).navigateTo(
+                                        new CreditsFragment(), getString(R.string.settings_credits));
+                            }
+                        })
         )));
     }
 }
