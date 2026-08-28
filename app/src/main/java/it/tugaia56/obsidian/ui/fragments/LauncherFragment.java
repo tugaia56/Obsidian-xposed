@@ -57,7 +57,6 @@ public class LauncherFragment extends Fragment {
     private static final String KEY_LAUNCHER_COLUMNS      = "launcher_columns";
     private static final String KEY_LAUNCHER_ROWS         = "launcher_rows";
     private static final String KEY_DESKTOP_HIDE_LABELS   = "desktop_hide_app_labels";
-    private static final String KEY_FORCE_DOCK_COLUMNS    = "force_dock_as_columns";
 
     private static final String KEY_REARRANGE_FOLDER      = "rearrange_folder";
     private static final String KEY_FOLDER_MAX_COLUMNS    = "folder_max_columns";
@@ -146,8 +145,7 @@ public class LauncherFragment extends Fragment {
         chain.add(sliderRow(getString(R.string.launcher_columns), KEY_LAUNCHER_COLUMNS, 4, 8, 4));
         chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS),
-                boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS))));
+                boolItem(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS))));
 
         // ── Folder Layout ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_folder_layout))));

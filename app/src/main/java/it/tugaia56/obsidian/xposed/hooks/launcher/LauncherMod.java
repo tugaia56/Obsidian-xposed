@@ -53,6 +53,12 @@ import it.tugaia56.obsidian.xposed.XposedMods;
  * icon-cache build, which needs a genuine device reboot and even then wasn't visually
  * changing icons), so the feature never worked reliably and the user asked to drop it rather
  * than keep chasing it. Ported utility class GoogleMonochromeIconFactory.java was removed too.
+ *
+ * Forza Dock a Colonne was also attempted and reverted the same day: isDockerMax5 lifted the
+ * cap check but the dock stayed at 5 icons regardless, and a follow-up dedicated
+ * getDockerNumShownHotseatIcons hook (tried across 4 candidate classes, found via dex-string
+ * grep) had zero effect either — "hooked OK" logs proved nothing since hookAllMethods no-ops
+ * silently on a non-matching method name. Never confirmed working; dropped per user request.
  */
 public class LauncherMod extends XposedMods {
 
@@ -69,7 +75,6 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_REARRANGE_HOME = "rearrange_home";
     private static final String KEY_LAUNCHER_COLUMNS = "launcher_columns";
     private static final String KEY_LAUNCHER_ROWS    = "launcher_rows";
-    private static final String KEY_FORCE_DOCK_COLUMNS = "force_dock_as_columns";
     private static final String KEY_REARRANGE_DRAWER = "rearrange_drawer";
     private static final String KEY_DRAWER_COLUMNS   = "drawer_columns";
     private static final String KEY_REARRANGE_FOLDER   = "rearrange_folder";
@@ -102,7 +107,6 @@ public class LauncherMod extends XposedMods {
     private boolean mRearrangeHome = false;
     private int mMaxColumns = 5;
     private int mMaxRows = 6;
-    private boolean mForceDockColumns = false;
     private boolean mRearrangeDrawer = false;
     private int mDrawerColumns = 4;
     private boolean mRearrangeFolder = false;
@@ -139,7 +143,6 @@ public class LauncherMod extends XposedMods {
         mRearrangeHome = Xprefs.getBoolean(KEY_REARRANGE_HOME, false);
         mMaxColumns    = Xprefs.getInt(KEY_LAUNCHER_COLUMNS, 4);
         mMaxRows       = Xprefs.getInt(KEY_LAUNCHER_ROWS, 4);
-        mForceDockColumns = Xprefs.getBoolean(KEY_FORCE_DOCK_COLUMNS, false);
 
         mRearrangeDrawer = Xprefs.getBoolean(KEY_REARRANGE_DRAWER, false);
         mDrawerColumns   = Xprefs.getInt(KEY_DRAWER_COLUMNS, 4);
@@ -166,7 +169,6 @@ public class LauncherMod extends XposedMods {
         hookDockBackground(lpparam);
         hookDrawerColumns(lpparam);
         hookHomeLayout(lpparam);
-        hookForceDockColumns(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -798,21 +800,6 @@ public class LauncherMod extends XposedMods {
             });
         } catch (Throwable t) {
             log("ToggleBarLayoutAdapter not found: " + t);
-        }
-    }
-
-    // ── Forza Dock a Colonne (rimuove il limite di 5 icone nel dock) ────────────────────────
-    private void hookForceDockColumns(XC_LoadPackage.LoadPackageParam lpparam) {
-        try {
-            Class<?> featureOption = findClass("com.android.common.config.FeatureOption", lpparam.classLoader);
-            hookAllMethods(featureOption, "isDockerMax5", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (mForceDockColumns) param.setResult(false);
-                }
-            });
-        } catch (Throwable t) {
-            log("hookForceDockColumns (isDockerMax5) failed: " + t);
         }
     }
 

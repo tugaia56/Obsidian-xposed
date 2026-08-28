@@ -341,8 +341,6 @@
     <string name="hide_app_labels">Nascondi etichette app</string>
     <string name="hide_app_labels_desktop">Nascondi etichette app nella schermata iniziale</string>
     <string name="hide_app_labels_drawer">Nascondi etichette app nel drawer</string>
-    <string name="launcher_force_dock">Forza elementi dock</string>
-    <string name="launcher_force_dock_summary">Rendi le icone nel dock uguali alle colonne del launcher</string>
     <string name="launcher_folder_layout">Disposizione cartelle</string>
     <string name="launcher_folder_edit_layout">Modifica disposizione</string>
     <string name="launcher_folder_columns">Colonne</string>
