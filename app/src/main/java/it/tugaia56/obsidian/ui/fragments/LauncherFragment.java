@@ -154,7 +154,7 @@ public class LauncherFragment extends Fragment {
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.launcher_folder_edit_layout, null, KEY_REARRANGE_FOLDER))));
         chain.add(sliderRow(getString(R.string.launcher_folder_columns), KEY_FOLDER_MAX_COLUMNS, 3, 7, 3));
-        chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3, false));
+        chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW),
                 boolItem(R.string.remove_folder_pagination_title, null, KEY_REMOVE_FOLDER_PAGE))));
