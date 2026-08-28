@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import it.tugaia56.obsidian.xposed.XposedMods;
 import it.tugaia56.obsidian.xposed.utils.GoogleMonochromeIconFactory;
@@ -536,9 +537,9 @@ public class LauncherMod extends XposedMods {
                     } catch (Throwable ignored) {}
                 }
             });
-            log("DIAG BaseIconFactory hook attached OK");
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] BaseIconFactory hook attached OK");
         } catch (Throwable t) {
-            log("BaseIconFactory not found: " + t);
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] BaseIconFactory not found: " + t);
         }
 
         try {
@@ -559,9 +560,9 @@ public class LauncherMod extends XposedMods {
                     }
                 }
             });
-            log("DIAG UxIconLoaderHelper hook attached OK");
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] UxIconLoaderHelper hook attached OK");
         } catch (Throwable t) {
-            log("UxIconLoaderHelper not found: " + t);
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] UxIconLoaderHelper not found: " + t);
         }
 
         hookAllMethods(AdaptiveIconDrawable.class, "getMonochrome", new XC_MethodHook() {
@@ -611,9 +612,9 @@ public class LauncherMod extends XposedMods {
                     }
                 }
             });
-            log("DIAG OplusBubbleTextView hook attached OK");
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] OplusBubbleTextView hook attached OK");
         } catch (Throwable t) {
-            log("OplusBubbleTextView not found: " + t);
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] OplusBubbleTextView not found: " + t);
         }
 
         // Anteprime nelle cartelle
