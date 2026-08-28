@@ -40,11 +40,16 @@ import it.tugaia56.obsidian.utils.overlay.FabricatedUtil;
  * Dock Background, Recents, Themed Icons, Miscellaneous). Pref keys match OC's exactly.
  *
  * Real, working hooks so far: Recents button color (Fabricated RRO Overlay, not a hook) and,
- * via LauncherMod (ported from OC's Launcher.java): hide app labels (Home/Drawer) and the
- * whole Recenti section (Apri Dettagli App, Disabilita Pagina Recenti Precedente, Sostituisci
- * Blocco). Everything else is UI/prefs only, marked with [[wip_inline_suffix]] in the row
+ * via LauncherMod (ported from OC's Launcher.java): hide app labels (Home/Drawer), the whole
+ * Recenti section (Apri Dettagli App, Disabilita Pagina Recenti Precedente, Sostituisci
+ * Blocco), Rimuovi Impaginazione, Nascondi Scroller, and Comportamento Personalizzato Swipe
+ * Destro. Everything else is UI/prefs only, marked with [[wip_inline_suffix]] in the row
  * summary — being ported one section at a time from OC's
  * Launcher.java/DockBackground.java/ThemedIcons.java so each lands as its own testable build.
+ *
+ * Icone a Tema was attempted and reverted 2026-08-28 (see [[project_launcher_mods_rollout]]
+ * memory) — the OEM's own themed-icon pipeline barely fires on the test device, so it never
+ * worked reliably and the user asked to drop it rather than keep chasing it.
  */
 public class LauncherFragment extends Fragment {
 
@@ -72,7 +77,6 @@ public class LauncherFragment extends Fragment {
     private static final String KEY_FORCE_THEMED_ICONS    = "force_themed_launcher_icons";
     private static final String KEY_ALT_MONOCHROME        = "alternative_monochrome";
     private static final String KEY_CUSTOM_THEMED_WHERE   = "custom_themed_icons_where";
-    private static final String KEY_CUSTOM_ICON_MAP_ENABLED = "themed_icons_where_enabled";
 
     private static final String KEY_REMOVE_HOME_PAGE      = "remove_home_pagination";
     private static final String KEY_HIDE_SCROLLER         = "hide_scroller";
@@ -180,12 +184,9 @@ public class LauncherFragment extends Fragment {
         // ── Themed icons ─────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_themed_icons))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS),
-                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME))));
-        chain.add(new SwitchWidgetAdapter(List.of(customIconMapSwitch())));
-        if (ObsidianPrefs.getBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, false)) {
-            chain.add(themedIconsWhereRow());
-        }
+                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS, false),
+                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME, false))));
+        chain.add(themedIconsWhereRow());
 
         // ── Miscellaneous ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.misc_category))));
@@ -331,20 +332,6 @@ public class LauncherFragment extends Fragment {
         return new SliderWidgetAdapter(List.of(item));
     }
 
-    /** Gate switch — the "where to apply" picker row only shows (and only has any effect)
-     *  while this is on, matching OC's actual two-pref design. */
-    private SwitchWidgetAdapter.SwitchItem customIconMapSwitch() {
-        boolean on = ObsidianPrefs.getBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, false);
-        SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
-                getString(R.string.themed_icons_where_switch),
-                getString(R.string.themed_icons_where_switch_summary), on, null);
-        item.onChanged = () -> {
-            ObsidianPrefs.putBoolean(KEY_CUSTOM_ICON_MAP_ENABLED, item.checked);
-            rebuild();
-        };
-        return item;
-    }
-
     /** Multi-select dialog for "where to apply themed icons" (workspace/drawer/folder/search/taskbar). */
     private ListWidgetAdapter themedIconsWhereRow() {
         String[] entries = {
@@ -354,7 +341,7 @@ public class LauncherFragment extends Fragment {
         };
         final ListWidgetAdapter[] adapterRef = new ListWidgetAdapter[1];
         ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
-                getString(R.string.themed_icons_where_title),
+                getString(R.string.themed_icons_where_switch) + getString(R.string.wip_inline_suffix),
                 themedIconsWhereSummary(entries),
                 () -> showThemedIconsWhereDialog(entries, adapterRef[0]));
         ListWidgetAdapter adapter = new ListWidgetAdapter(List.of(item));
