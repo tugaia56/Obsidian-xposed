@@ -335,6 +335,7 @@
     <string name="general_off">Disattivato</string>
     <string name="launcher_layout">Disposizione della home</string>
     <string name="launcher_edit_layout">Modifica la disposizione della home</string>
+    <string name="launcher_edit_layout_summary">Sblocca più dimensioni nel selettore nativo "Disposizione griglia" di OOS — imposta Colonne/Righe qui sotto come massimo, poi scegli la dimensione lì</string>
     <string name="launcher_columns">Colonne home</string>
     <string name="launcher_rows">Righe home</string>
     <string name="hide_app_labels">Nascondi etichette app</string>

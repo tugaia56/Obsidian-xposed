@@ -338,6 +338,7 @@
     <string name="general_off">Off</string>
     <string name="launcher_layout">Home Layout</string>
     <string name="launcher_edit_layout">Edit home layout</string>
+    <string name="launcher_edit_layout_summary">Unlocks more sizes in OOS\'s own "Home layout" picker — set Columns/Rows below as the max, then pick the size there</string>
     <string name="launcher_columns">Home Columns</string>
     <string name="launcher_rows">Home Rows</string>
     <string name="hide_app_labels">Hide app labels</string>

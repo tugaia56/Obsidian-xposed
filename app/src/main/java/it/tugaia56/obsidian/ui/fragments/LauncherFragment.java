@@ -142,9 +142,9 @@ public class LauncherFragment extends Fragment {
         // ── Home Layout ──────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_layout))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_edit_layout, null, KEY_REARRANGE_HOME, false))));
-        chain.add(sliderRow(getString(R.string.launcher_columns), KEY_LAUNCHER_COLUMNS, 4, 8, 4, false));
-        chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4, false));
+                boolItem(R.string.launcher_edit_layout, R.string.launcher_edit_layout_summary, KEY_REARRANGE_HOME))));
+        chain.add(sliderRow(getString(R.string.launcher_columns), KEY_LAUNCHER_COLUMNS, 4, 8, 4));
+        chain.add(sliderRow(getString(R.string.launcher_rows), KEY_LAUNCHER_ROWS, 3, 10, 4));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.hide_app_labels, R.string.hide_app_labels_desktop, KEY_DESKTOP_HIDE_LABELS),
                 boolItem(R.string.launcher_force_dock, R.string.launcher_force_dock_summary, KEY_FORCE_DOCK_COLUMNS, false))));

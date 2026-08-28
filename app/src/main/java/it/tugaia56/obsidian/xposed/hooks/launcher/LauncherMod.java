@@ -12,6 +12,7 @@ import static de.robv.android.xposed.XposedHelpers.getStaticIntField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
 import static de.robv.android.xposed.XposedHelpers.setBooleanField;
 import static de.robv.android.xposed.XposedHelpers.setIntField;
+import static de.robv.android.xposed.XposedHelpers.setObjectField;
 import static de.robv.android.xposed.XposedHelpers.setStaticBooleanField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
 import static it.tugaia56.obsidian.xposed.XPrefs.Xprefs;
@@ -26,7 +27,10 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.util.Pair;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -62,6 +66,9 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_HIDE_SCROLLER        = "hide_scroller";
     private static final String KEY_SWIPE_RIGHT_ENABLED  = "launcher_custom_shelf_switch";
     private static final String KEY_SWIPE_RIGHT_MODE     = "laucher_shelf_custom"; // matches OC/UI exactly
+    private static final String KEY_REARRANGE_HOME = "rearrange_home";
+    private static final String KEY_LAUNCHER_COLUMNS = "launcher_columns";
+    private static final String KEY_LAUNCHER_ROWS    = "launcher_rows";
     private static final String KEY_REARRANGE_DRAWER = "rearrange_drawer";
     private static final String KEY_DRAWER_COLUMNS   = "drawer_columns";
     private static final String KEY_REARRANGE_FOLDER   = "rearrange_folder";
@@ -91,6 +98,9 @@ public class LauncherMod extends XposedMods {
     private int mDockBackgroundRadius = 30;
     private Object mBlurProp; // com.android.launcher3.uioverrides.states.blurdrawable.OplusBlurProperties instance
 
+    private boolean mRearrangeHome = false;
+    private int mMaxColumns = 5;
+    private int mMaxRows = 6;
     private boolean mRearrangeDrawer = false;
     private int mDrawerColumns = 4;
     private boolean mRearrangeFolder = false;
@@ -124,6 +134,10 @@ public class LauncherMod extends XposedMods {
         mDockBackgroundBlurAmount = DOCK_BLUR_AMOUNTS[Math.max(0, Math.min(amountIndex, DOCK_BLUR_AMOUNTS.length - 1))];
         mDockBackgroundRadius = Xprefs.getInt(KEY_DOCK_BG_RADIUS, 30);
 
+        mRearrangeHome = Xprefs.getBoolean(KEY_REARRANGE_HOME, false);
+        mMaxColumns    = Xprefs.getInt(KEY_LAUNCHER_COLUMNS, 4);
+        mMaxRows       = Xprefs.getInt(KEY_LAUNCHER_ROWS, 4);
+
         mRearrangeDrawer = Xprefs.getBoolean(KEY_REARRANGE_DRAWER, false);
         mDrawerColumns   = Xprefs.getInt(KEY_DRAWER_COLUMNS, 4);
 
@@ -148,6 +162,7 @@ public class LauncherMod extends XposedMods {
         hookSwipeRightBehavior(lpparam);
         hookDockBackground(lpparam);
         hookDrawerColumns(lpparam);
+        hookHomeLayout(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -713,6 +728,72 @@ public class LauncherMod extends XposedMods {
             });
         } catch (Throwable t) {
             log("FolderInfo not found: " + t);
+        }
+    }
+
+    // ── Disposizione Home (colonne/righe griglia) — sblocca il selettore nativo OOS ──────────
+    // Diverso dagli altri: non forza direttamente una griglia, allarga la lista di opzioni che
+    // il menu nativo "Disposizione griglia" della Home offre — l'utente sceglie lì il valore
+    // finale, dentro il nuovo intervallo Min..mMaxColumns/mMaxRows.
+    private void hookHomeLayout(XC_LoadPackage.LoadPackageParam lpparam) {
+        ClassLoader cl = lpparam.classLoader;
+        final int MIN_COLS = 3;
+        final int MIN_ROWS = 4;
+
+        try {
+            Class<?> uiConfig = findClass("com.android.launcher.UiConfig", cl);
+
+            hookAllMethods(uiConfig, "isSupportLayout", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (mRearrangeHome) param.setResult(true);
+                }
+            });
+
+            if (Build.VERSION.SDK_INT >= 36) { // OOS16
+                hookAllMethods(uiConfig, "getSupportLayout", new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) {
+                        try {
+                            if (!mRearrangeHome) return;
+                            ArrayList<Pair<Integer, Pair<Integer, Integer>>> list = new ArrayList<>();
+                            for (int col = MIN_COLS; col <= mMaxColumns; col++) {
+                                for (int row = MIN_ROWS; row <= mMaxRows; row++) {
+                                    list.add(Pair.create(col, Pair.create(row, row)));
+                                }
+                            }
+                            param.setResult(list);
+                        } catch (Throwable t) {
+                            log("hookHomeLayout (getSupportLayout) failed: " + t);
+                        }
+                    }
+                });
+            }
+        } catch (Throwable t) {
+            log("UiConfig not found: " + t);
+        }
+
+        try {
+            Class<?> toggleBarLayoutAdapter = findClass(
+                    "com.android.launcher.togglebar.adapter.ToggleBarLayoutAdapter", cl);
+            hookAllMethods(toggleBarLayoutAdapter, "initToggleBarLayoutConfigs", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    try {
+                        if (!mRearrangeHome) return;
+                        int[] minMaxRows = (int[]) getObjectField(param.thisObject, "MIN_MAX_ROW");
+                        int[] minMaxColumns = (int[]) getObjectField(param.thisObject, "MIN_MAX_COLUMN");
+                        minMaxRows[1] = mMaxRows;
+                        minMaxColumns[1] = mMaxColumns;
+                        setObjectField(param.thisObject, "MIN_MAX_ROW", minMaxRows);
+                        setObjectField(param.thisObject, "MIN_MAX_COLUMN", minMaxColumns);
+                    } catch (Throwable t) {
+                        log("hookHomeLayout (initToggleBarLayoutConfigs) failed: " + t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            log("ToggleBarLayoutAdapter not found: " + t);
         }
     }
 
