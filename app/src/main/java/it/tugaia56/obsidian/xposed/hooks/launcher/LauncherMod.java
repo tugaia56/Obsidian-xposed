@@ -550,7 +550,10 @@ public class LauncherMod extends XposedMods {
                     try {
                         log("DIAG getIconThemeDrawable called, force=" + mForceThemedIcons
                                 + " alt=" + mAlternativeMono + " resultNull=" + (param.getResult() == null));
-                        if (!mForceThemedIcons || !mAlternativeMono || param.getResult() != null) return;
+                        // Not gated by mAlternativeMono either — this path is confirmed to never
+                        // fire on the test device, but leave it available in case it does on
+                        // others; both fallbacks are harmless to have active together.
+                        if (!mForceThemedIcons || param.getResult() != null) return;
                         if (mIconBitmapSize <= 0) return; // BaseIconFactory hasn't run yet on this thread
                         PackageItemInfo info = (PackageItemInfo) param.args[1];
                         Drawable icon = info.loadIcon(mContext.getPackageManager());
@@ -571,7 +574,11 @@ public class LauncherMod extends XposedMods {
                 try {
                     log("DIAG getMonochrome called, force=" + mForceThemedIcons
                             + " alt=" + mAlternativeMono + " resultNull=" + (param.getResult() == null));
-                    if (param.getResult() != null || !mForceThemedIcons || mAlternativeMono) return;
+                    // Not gated by mAlternativeMono: on this ROM getIconThemeDrawable (the
+                    // Alternative-only path below) never actually fires, so restricting this
+                    // fallback to "Alternative off" left Force Themed Icons doing nothing at
+                    // all when Alternative was on. This is the path that's confirmed to work.
+                    if (param.getResult() != null || !mForceThemedIcons) return;
                     if (mIconBitmapSize <= 0) return; // BaseIconFactory hasn't run yet on this thread
                     // Skip if this call came from IconProvider.getIconWithOverrides — monochrome
                     // is already handled there, forcing it again here would double up.
