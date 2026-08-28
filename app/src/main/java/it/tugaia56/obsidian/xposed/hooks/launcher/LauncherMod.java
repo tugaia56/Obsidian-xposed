@@ -11,6 +11,7 @@ import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.getStaticIntField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
 import static de.robv.android.xposed.XposedHelpers.setBooleanField;
+import static de.robv.android.xposed.XposedHelpers.setIntField;
 import static de.robv.android.xposed.XposedHelpers.setStaticBooleanField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
 import static it.tugaia56.obsidian.xposed.XPrefs.Xprefs;
@@ -36,10 +37,11 @@ import it.tugaia56.obsidian.xposed.XposedMods;
  * Real OC Launcher.java mechanism, ported one section at a time. So far: hide app labels
  * (Home/Drawer), the full "Recenti" section (Apri Dettagli App, Disabilita Pagina Recenti
  * Precedente, Sostituisci Blocco), Rimuovi Impaginazione (Home + Cartelle), Nascondi
- * Scroller, Comportamento Personalizzato Swipe Destro (Discover/Shelf panel), and Sfondo
+ * Scroller, Comportamento Personalizzato Swipe Destro (Discover/Shelf panel), Sfondo
  * Dock (ported from OC's DockBackground.java — solid/"Materiale" blur via OplusBlurProperties,
- * Android 15+ only). Rest of OC's Launcher.java (columns/rows, folder/drawer rearrange,
- * force-dock) is next, one at a time so each can be tested in isolation.
+ * Android 15+ only), and Riordina Layout Drawer (colonne del cassetto app). Rest of OC's
+ * Launcher.java (Home/Folder columns-rows, force-dock) is next, one at a time so each can
+ * be tested in isolation.
  *
  * Icone a Tema (Forza/Alternativa monocroma) was attempted and reverted 2026-08-28 — see
  * [[project_launcher_mods_rollout]] memory: the OEM's own themed-icon pipeline barely fires
@@ -60,6 +62,8 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_HIDE_SCROLLER        = "hide_scroller";
     private static final String KEY_SWIPE_RIGHT_ENABLED  = "launcher_custom_shelf_switch";
     private static final String KEY_SWIPE_RIGHT_MODE     = "laucher_shelf_custom"; // matches OC/UI exactly
+    private static final String KEY_REARRANGE_DRAWER = "rearrange_drawer";
+    private static final String KEY_DRAWER_COLUMNS   = "drawer_columns";
     private static final String KEY_DOCK_BG          = "dockBackground";
     private static final String KEY_DOCK_BG_MATERIAL = "dockBackgroundMaterial";
     private static final String KEY_DOCK_BG_AMOUNT   = "dockBackgroundMaterialAmount";
@@ -82,6 +86,9 @@ public class LauncherMod extends XposedMods {
     private int mDockBackgroundBlurAmount = DOCK_BLUR_AMOUNTS[0];
     private int mDockBackgroundRadius = 30;
     private Object mBlurProp; // com.android.launcher3.uioverrides.states.blurdrawable.OplusBlurProperties instance
+
+    private boolean mRearrangeDrawer = false;
+    private int mDrawerColumns = 4;
 
     private View mFastScrollView;
 
@@ -109,6 +116,9 @@ public class LauncherMod extends XposedMods {
         mDockBackgroundBlurAmount = DOCK_BLUR_AMOUNTS[Math.max(0, Math.min(amountIndex, DOCK_BLUR_AMOUNTS.length - 1))];
         mDockBackgroundRadius = Xprefs.getInt(KEY_DOCK_BG_RADIUS, 30);
 
+        mRearrangeDrawer = Xprefs.getBoolean(KEY_REARRANGE_DRAWER, false);
+        mDrawerColumns   = Xprefs.getInt(KEY_DRAWER_COLUMNS, 4);
+
         if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
             updateFastScroll();
         }
@@ -124,6 +134,7 @@ public class LauncherMod extends XposedMods {
         hookHideScroller(lpparam);
         hookSwipeRightBehavior(lpparam);
         hookDockBackground(lpparam);
+        hookDrawerColumns(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -611,6 +622,39 @@ public class LauncherMod extends XposedMods {
             callMethod(mBlurProp, "setBlurParams", mDockBackgroundBlurAmount, blendMode, blendColor, mixColor);
         } catch (Throwable t) {
             log("initDockBlurBackground failed: " + t);
+        }
+    }
+
+    // ── Riordina Layout Drawer (colonne del cassetto app) ───────────────────────────────────
+    private void hookDrawerColumns(XC_LoadPackage.LoadPackageParam lpparam) {
+        ClassLoader cl = lpparam.classLoader;
+
+        try {
+            Class<?> gridOption = findClass("com.android.launcher3.InvariantDeviceProfile$GridOption", cl);
+            hookAllConstructors(gridOption, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        if (mRearrangeDrawer) setIntField(param.thisObject, "numAllAppsColumns", mDrawerColumns);
+                    } catch (Throwable t) {
+                        log("hookDrawerColumns (GridOption) failed: " + t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            log("InvariantDeviceProfile$GridOption not found: " + t);
+        }
+
+        try {
+            Class<?> allAppsParam = findClass("com.android.launcher.layoutparam.AllAppsParam", cl);
+            hookAllMethods(allAppsParam, "getNumAllAppsColumns", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (mRearrangeDrawer) param.setResult(mDrawerColumns);
+                }
+            });
+        } catch (Throwable t) {
+            log("AllAppsParam not found: " + t);
         }
     }
 

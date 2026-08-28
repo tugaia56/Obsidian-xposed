@@ -24,7 +24,6 @@ import java.util.List;
 import it.tugaia56.obsidian.R;
 import it.tugaia56.obsidian.ui.activity.MainActivity;
 import it.tugaia56.obsidian.ui.adapters.ListWidgetAdapter;
-import it.tugaia56.obsidian.ui.adapters.NavAdapter;
 import it.tugaia56.obsidian.ui.adapters.SectionTitleAdapter;
 import it.tugaia56.obsidian.ui.adapters.SliderWidgetAdapter;
 import it.tugaia56.obsidian.ui.adapters.SwitchWidgetAdapter;
@@ -74,10 +73,6 @@ public class LauncherFragment extends Fragment {
     private static final String KEY_DISABLE_PREV_RECENTS  = "disable_previous_recents";
     private static final String KEY_REPLACE_LOCK          = "replace_lock";
 
-    private static final String KEY_FORCE_THEMED_ICONS    = "force_themed_launcher_icons";
-    private static final String KEY_ALT_MONOCHROME        = "alternative_monochrome";
-    private static final String KEY_CUSTOM_THEMED_WHERE   = "custom_themed_icons_where";
-
     private static final String KEY_REMOVE_HOME_PAGE      = "remove_home_pagination";
     private static final String KEY_HIDE_SCROLLER         = "hide_scroller";
 
@@ -97,7 +92,6 @@ public class LauncherFragment extends Fragment {
     private static final String[] OVERLAY_RECENTS_NAMES = {
             OVERLAY_RECENTS_COLOR, OVERLAY_RECENTS_DRAWABLE1, OVERLAY_RECENTS_DRAWABLE2};
 
-    private static final int ACCENT_DOCK = 0xFF7C4DFF; // purple
 
     private static final int RECENTS_COLOR_DIALOG_ID = KEY_RECENTS_BTN_COLOR.hashCode();
 
@@ -168,25 +162,15 @@ public class LauncherFragment extends Fragment {
         // ── Drawer ───────────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.drawer))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_drawer_edit_columns, null, KEY_REARRANGE_DRAWER, false))));
-        chain.add(sliderRow(getString(R.string.drawer_columns), KEY_DRAWER_COLUMNS, 3, 7, 4, false));
+                boolItem(R.string.launcher_drawer_edit_columns, null, KEY_REARRANGE_DRAWER))));
+        chain.add(sliderRow(getString(R.string.drawer_columns), KEY_DRAWER_COLUMNS, 3, 7, 4));
         chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(R.string.hide_app_labels, R.string.hide_app_labels_drawer, KEY_DRAWER_HIDE_LABELS))));
 
         // ── Dock background (sub-screen) ────────────────────────────────────
-        chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
-                R.drawable.ic_mods_tools,
-                getString(R.string.dock_background),
-                null,
-                () -> navigate(new LauncherDockBackgroundFragment(), getString(R.string.dock_background)),
-                ACCENT_DOCK))));
-
-        // ── Themed icons ─────────────────────────────────────────────────────
-        chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_themed_icons))));
-        chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.force_themed_launcher_icons, R.string.force_themed_launcher_icons_summary, KEY_FORCE_THEMED_ICONS, false),
-                boolItem(R.string.alternative_themed_icons_title, R.string.alternative_themed_icons_summary, KEY_ALT_MONOCHROME, false))));
-        chain.add(themedIconsWhereRow());
+        chain.add(new ListWidgetAdapter(List.of(new ListWidgetAdapter.ListItem(
+                getString(R.string.dock_background), null,
+                () -> navigate(new LauncherDockBackgroundFragment(), getString(R.string.dock_background))))));
 
         // ── Miscellaneous ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.misc_category))));
@@ -330,68 +314,6 @@ public class LauncherFragment extends Fragment {
                 title, current, min, max, "", def,
                 value -> ObsidianPrefs.putInt(key, value));
         return new SliderWidgetAdapter(List.of(item));
-    }
-
-    /** Multi-select dialog for "where to apply themed icons" (workspace/drawer/folder/search/taskbar). */
-    private ListWidgetAdapter themedIconsWhereRow() {
-        String[] entries = {
-                getString(R.string.themed_icons_workspace), getString(R.string.themed_icons_drawer),
-                getString(R.string.themed_icons_folder), getString(R.string.themed_icons_search),
-                getString(R.string.themed_icons_taskbar)
-        };
-        final ListWidgetAdapter[] adapterRef = new ListWidgetAdapter[1];
-        ListWidgetAdapter.ListItem item = new ListWidgetAdapter.ListItem(
-                getString(R.string.themed_icons_where_switch) + getString(R.string.wip_inline_suffix),
-                themedIconsWhereSummary(entries),
-                () -> showThemedIconsWhereDialog(entries, adapterRef[0]));
-        ListWidgetAdapter adapter = new ListWidgetAdapter(List.of(item));
-        adapterRef[0] = adapter;
-        return adapter;
-    }
-
-    private String themedIconsWhereSummary(String[] entries) {
-        boolean[] selected = themedIconsWhereSelection(entries.length);
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < entries.length; i++) {
-            if (selected[i]) {
-                if (sb.length() > 0) sb.append(", ");
-                sb.append(entries[i]);
-            }
-        }
-        return sb.length() > 0 ? sb.toString() : getString(R.string.general_off);
-    }
-
-    private boolean[] themedIconsWhereSelection(int count) {
-        String stored = ObsidianPrefs.getString(KEY_CUSTOM_THEMED_WHERE, "0,1,2,3,4");
-        boolean[] result = new boolean[count];
-        for (String s : stored.split(",")) {
-            try {
-                int idx = Integer.parseInt(s.trim());
-                if (idx >= 0 && idx < count) result[idx] = true;
-            } catch (NumberFormatException ignored) {}
-        }
-        return result;
-    }
-
-    private void showThemedIconsWhereDialog(String[] entries, ListWidgetAdapter adapter) {
-        boolean[] checked = themedIconsWhereSelection(entries.length);
-        ObsidianTheme.themeDialog(new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.themed_icons_where_title)
-                .setMultiChoiceItems(entries, checked, (d, which, isChecked) -> checked[which] = isChecked)
-                .setPositiveButton(R.string.apply, (d, w) -> {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < checked.length; i++) {
-                        if (checked[i]) {
-                            if (sb.length() > 0) sb.append(",");
-                            sb.append(i);
-                        }
-                    }
-                    ObsidianPrefs.putString(KEY_CUSTOM_THEMED_WHERE, sb.toString());
-                    adapter.getItems().get(0).valueSummary = themedIconsWhereSummary(entries);
-                    adapter.notifyItemChanged(0);
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show());
     }
 
     /** Collapses OC's separate enable-switch + 3-way radio group into a single single-choice

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import it.tugaia56.obsidian.R;
@@ -30,6 +31,8 @@ public class LauncherDockBackgroundFragment extends Fragment {
     private static final String KEY_DOCK_BG_AMOUNT   = "dockBackgroundMaterialAmount";
     private static final String KEY_DOCK_BG_RADIUS   = "dockBackgroundRadius";
 
+    private RecyclerView mRv;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -45,22 +48,33 @@ public class LauncherDockBackgroundFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        RecyclerView rv = (RecyclerView) view;
+        mRv = (RecyclerView) view;
+        rebuild();
+    }
 
-        SwitchWidgetAdapter toggles = new SwitchWidgetAdapter(List.of(
+    private void rebuild() {
+        List<RecyclerView.Adapter<?>> chain = new ArrayList<>();
+
+        chain.add(new SwitchWidgetAdapter(List.of(
                 boolItem(getString(R.string.dock_background), getString(R.string.dock_background_summary), KEY_DOCK_BG),
-                boolItem(getString(R.string.dock_background_material), getString(R.string.dock_background_material_summary), KEY_DOCK_BG_MATERIAL)));
+                boolItem(getString(R.string.dock_background_material), getString(R.string.dock_background_material_summary), KEY_DOCK_BG_MATERIAL))));
 
-        SliderWidgetAdapter amount = sliderRow(getString(R.string.dock_background_amount), KEY_DOCK_BG_AMOUNT, 0, 4, 0);
-        SliderWidgetAdapter radius = sliderRow(getString(R.string.dock_background_radius), KEY_DOCK_BG_RADIUS, 0, 100, 30);
+        // Quantità/Raggio angolo si applicano solo a "Materiale" — visibili solo con quella attiva.
+        if (ObsidianPrefs.getBoolean(KEY_DOCK_BG_MATERIAL, false)) {
+            chain.add(sliderRow(getString(R.string.dock_background_amount), KEY_DOCK_BG_AMOUNT, 0, 4, 0));
+            chain.add(sliderRow(getString(R.string.dock_background_radius), KEY_DOCK_BG_RADIUS, 0, 100, 30));
+        }
 
-        rv.setAdapter(new ConcatAdapter(toggles, amount, radius));
+        mRv.setAdapter(new ConcatAdapter(chain.toArray(new RecyclerView.Adapter<?>[0])));
     }
 
     private SwitchWidgetAdapter.SwitchItem boolItem(String title, String summary, String key) {
         SwitchWidgetAdapter.SwitchItem item = new SwitchWidgetAdapter.SwitchItem(
                 title, summary, ObsidianPrefs.getBoolean(key, false), null);
-        item.onChanged = () -> ObsidianPrefs.putBoolean(key, item.checked);
+        item.onChanged = () -> {
+            ObsidianPrefs.putBoolean(key, item.checked);
+            if (KEY_DOCK_BG_MATERIAL.equals(key)) rebuild();
+        };
         return item;
     }
 
