@@ -177,7 +177,7 @@ public class LauncherFragment extends Fragment {
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
                 R.drawable.ic_mods_tools,
                 getString(R.string.dock_background),
-                getString(R.string.wip_inline_suffix).replaceFirst("^ · ", ""),
+                null,
                 () -> navigate(new LauncherDockBackgroundFragment(), getString(R.string.dock_background)),
                 ACCENT_DOCK))));
 

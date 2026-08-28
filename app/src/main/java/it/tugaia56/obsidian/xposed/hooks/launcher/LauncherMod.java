@@ -3,6 +3,7 @@ package it.tugaia56.obsidian.xposed.hooks.launcher;
 import static de.robv.android.xposed.XposedBridge.hookAllConstructors;
 import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.callMethod;
+import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.getAdditionalInstanceField;
 import static de.robv.android.xposed.XposedHelpers.getIntField;
@@ -12,13 +13,17 @@ import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
 import static de.robv.android.xposed.XposedHelpers.setBooleanField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
 import static it.tugaia56.obsidian.xposed.XPrefs.Xprefs;
+import static it.tugaia56.obsidian.xposed.utils.ViewHelper.dp2px;
 
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Process;
 import android.provider.Settings;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -29,9 +34,10 @@ import it.tugaia56.obsidian.xposed.XposedMods;
  * Real OC Launcher.java mechanism, ported one section at a time. So far: hide app labels
  * (Home/Drawer), the full "Recenti" section (Apri Dettagli App, Disabilita Pagina Recenti
  * Precedente, Sostituisci Blocco), Rimuovi Impaginazione (Home + Cartelle), Nascondi
- * Scroller, and Comportamento Personalizzato Swipe Destro (Discover/Shelf panel). Rest of
- * OC's Launcher.java (columns/rows, folder/drawer rearrange, force-dock, Dock Background)
- * is next, one at a time so each can be tested in isolation.
+ * Scroller, Comportamento Personalizzato Swipe Destro (Discover/Shelf panel), and Sfondo
+ * Dock (ported from OC's DockBackground.java — solid/"Materiale" blur via OplusBlurProperties,
+ * Android 15+ only). Rest of OC's Launcher.java (columns/rows, folder/drawer rearrange,
+ * force-dock) is next, one at a time so each can be tested in isolation.
  *
  * Icone a Tema (Forza/Alternativa monocroma) was attempted and reverted 2026-08-28 — see
  * [[project_launcher_mods_rollout]] memory: the OEM's own themed-icon pipeline barely fires
@@ -52,6 +58,11 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_HIDE_SCROLLER        = "hide_scroller";
     private static final String KEY_SWIPE_RIGHT_ENABLED  = "launcher_custom_shelf_switch";
     private static final String KEY_SWIPE_RIGHT_MODE     = "laucher_shelf_custom"; // matches OC/UI exactly
+    private static final String KEY_DOCK_BG          = "dockBackground";
+    private static final String KEY_DOCK_BG_MATERIAL = "dockBackgroundMaterial";
+    private static final String KEY_DOCK_BG_AMOUNT   = "dockBackgroundMaterialAmount";
+    private static final String KEY_DOCK_BG_RADIUS   = "dockBackgroundRadius";
+    private static final int[] DOCK_BLUR_AMOUNTS = { 240, 300, 480, 660, 800 };
 
     private boolean mHideDesktopLabels = false;
     private boolean mHideDrawerLabels  = false;
@@ -63,6 +74,12 @@ public class LauncherMod extends XposedMods {
     private boolean mHideScroller           = false;
     private boolean mCustomShelfBehavior    = false;
     private int mShelfBehavior              = 2; // SHELF_STOCK — matches default when disabled
+
+    private boolean mDockBackground = false;
+    private boolean mDockBackgroundMaterial = false;
+    private int mDockBackgroundBlurAmount = DOCK_BLUR_AMOUNTS[0];
+    private int mDockBackgroundRadius = 30;
+    private Object mBlurProp; // com.android.launcher3.uioverrides.states.blurdrawable.OplusBlurProperties instance
 
     private View mFastScrollView;
 
@@ -84,6 +101,12 @@ public class LauncherMod extends XposedMods {
         mCustomShelfBehavior    = Xprefs.getBoolean(KEY_SWIPE_RIGHT_ENABLED, false);
         mShelfBehavior          = Xprefs.getInt(KEY_SWIPE_RIGHT_MODE, 2);
 
+        mDockBackground         = Xprefs.getBoolean(KEY_DOCK_BG, false);
+        mDockBackgroundMaterial = Xprefs.getBoolean(KEY_DOCK_BG_MATERIAL, false);
+        int amountIndex = Xprefs.getInt(KEY_DOCK_BG_AMOUNT, 0);
+        mDockBackgroundBlurAmount = DOCK_BLUR_AMOUNTS[Math.max(0, Math.min(amountIndex, DOCK_BLUR_AMOUNTS.length - 1))];
+        mDockBackgroundRadius = Xprefs.getInt(KEY_DOCK_BG_RADIUS, 30);
+
         if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
             updateFastScroll();
         }
@@ -98,6 +121,7 @@ public class LauncherMod extends XposedMods {
         hookRemovePagination(lpparam);
         hookHideScroller(lpparam);
         hookSwipeRightBehavior(lpparam);
+        hookDockBackground(lpparam);
     }
 
     // ── Nascondi Etichette (Home/Drawer) ────────────────────────────────────
@@ -468,6 +492,110 @@ public class LauncherMod extends XposedMods {
             });
         } catch (Throwable t) {
             log("FeatureOption not found: " + t);
+        }
+    }
+
+    // ── Sfondo Dock (solo/pieno o "Materiale"/sfocato, richiede OOS con blur di sistema) ────
+    private void hookDockBackground(XC_LoadPackage.LoadPackageParam lpparam) {
+        if (Build.VERSION.SDK_INT < 35) return; // stesso limite di OC — il blur di sistema serve Android 15+
+        ClassLoader cl = lpparam.classLoader;
+
+        try {
+            Class<?> oplusHotseat = findClass("com.android.launcher3.OplusHotseat", cl);
+
+            hookAllMethods(oplusHotseat, "init", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        if (mDockBackground) {
+                            callMethod(param.thisObject, "setDockerBackground");
+                        } else if (mDockBackgroundMaterial) {
+                            initDockBlurBackground(param.thisObject);
+                        }
+                    } catch (Throwable t) {
+                        log("hookDockBackground (init) failed: " + t);
+                    }
+                }
+            });
+
+            hookAllMethods(oplusHotseat, "onAttachedToWindow", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        ViewGroup oplusHotseatView = (ViewGroup) param.thisObject;
+                        oplusHotseatView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                            @Override
+                            public boolean onPreDraw() {
+                                oplusHotseatView.getViewTreeObserver().removeOnPreDrawListener(this);
+                                if (mDockBackgroundMaterial) {
+                                    try {
+                                        initDockBlurBackground(oplusHotseatView);
+                                    } catch (Throwable t) {
+                                        log("initDockBlurBackground (onAttachedToWindow) failed: " + t);
+                                    }
+                                }
+                                return true;
+                            }
+                        });
+                    } catch (Throwable t) {
+                        log("hookDockBackground (onAttachedToWindow) failed: " + t);
+                    }
+                }
+            });
+
+            hookAllMethods(oplusHotseat, "onDraw", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        if (mDockBackground) {
+                            callMethod(param.thisObject, "setDockerBackground");
+                        } else if (!mDockBackgroundMaterial) {
+                            View shortcutsAndWidgets = (View) getObjectField(param.thisObject, "mShortcutsAndWidgets");
+                            if (shortcutsAndWidgets.getBackground() != null) {
+                                shortcutsAndWidgets.setBackground(null);
+                            }
+                        }
+                    } catch (Throwable t) {
+                        log("hookDockBackground (onDraw) failed: " + t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            log("OplusHotseat not found: " + t);
+        }
+    }
+
+    private void initDockBlurBackground(Object oplusHotseat) {
+        try {
+            View shortcutsAndWidgets = (View) getObjectField(oplusHotseat, "mShortcutsAndWidgets");
+            Context context = ((View) oplusHotseat).getContext();
+            ClassLoader cl = oplusHotseat.getClass().getClassLoader();
+            Class<?> blurPropsClass = findClass(
+                    "com.android.launcher3.uioverrides.states.blurdrawable.OplusBlurProperties", cl);
+            Object blurColorParams = callStaticMethod(blurPropsClass, "getBlurColorParams", context);
+            Object blendMode = callMethod(blurColorParams, "getBlendMode");
+            Object blendColor = callMethod(blurColorParams, "getBlendColor");
+            Object mixColor = callMethod(blurColorParams, "getMixColor");
+
+            if (mBlurProp == null) {
+                Object prepared = callStaticMethod(blurPropsClass, "prepareBlur",
+                        shortcutsAndWidgets, context, true, true, 3);
+                if (prepared == null) return;
+                callMethod(prepared, "setBlurCornerRadius", dp2px(mContext, mDockBackgroundRadius), false);
+                callMethod(prepared, "setBlurParams", mDockBackgroundBlurAmount, blendMode, blendColor, mixColor);
+                mBlurProp = prepared;
+                return;
+            }
+
+            Class<?> layerBlurDrawableClass = findClass(
+                    "com.android.launcher3.uioverrides.states.blurdrawable.LayerBlurDrawable", cl);
+            if (!layerBlurDrawableClass.isInstance(shortcutsAndWidgets.getBackground())) {
+                callMethod(mBlurProp, "setBlurBgToView", shortcutsAndWidgets);
+            }
+            callMethod(mBlurProp, "setBlurCornerRadius", dp2px(mContext, mDockBackgroundRadius), false);
+            callMethod(mBlurProp, "setBlurParams", mDockBackgroundBlurAmount, blendMode, blendColor, mixColor);
+        } catch (Throwable t) {
+            log("initDockBlurBackground failed: " + t);
         }
     }
 
