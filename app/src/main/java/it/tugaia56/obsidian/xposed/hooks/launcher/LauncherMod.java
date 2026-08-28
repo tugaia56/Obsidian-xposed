@@ -64,6 +64,10 @@ public class LauncherMod extends XposedMods {
     private static final String KEY_SWIPE_RIGHT_MODE     = "laucher_shelf_custom"; // matches OC/UI exactly
     private static final String KEY_REARRANGE_DRAWER = "rearrange_drawer";
     private static final String KEY_DRAWER_COLUMNS   = "drawer_columns";
+    private static final String KEY_REARRANGE_FOLDER   = "rearrange_folder";
+    private static final String KEY_FOLDER_MAX_COLUMNS = "folder_max_columns";
+    private static final String KEY_FOLDER_MAX_ROWS    = "folder_max_rows";
+    private static final String KEY_REARRANGE_PREVIEW  = "rearrange_preview";
     private static final String KEY_DOCK_BG          = "dockBackground";
     private static final String KEY_DOCK_BG_MATERIAL = "dockBackgroundMaterial";
     private static final String KEY_DOCK_BG_AMOUNT   = "dockBackgroundMaterialAmount";
@@ -89,6 +93,10 @@ public class LauncherMod extends XposedMods {
 
     private boolean mRearrangeDrawer = false;
     private int mDrawerColumns = 4;
+    private boolean mRearrangeFolder = false;
+    private int mFolderColumns = 3;
+    private int mFolderRows = 3;
+    private boolean mFolderPreview = false;
 
     private View mFastScrollView;
 
@@ -118,6 +126,11 @@ public class LauncherMod extends XposedMods {
 
         mRearrangeDrawer = Xprefs.getBoolean(KEY_REARRANGE_DRAWER, false);
         mDrawerColumns   = Xprefs.getInt(KEY_DRAWER_COLUMNS, 4);
+
+        mRearrangeFolder = Xprefs.getBoolean(KEY_REARRANGE_FOLDER, false);
+        mFolderColumns   = Xprefs.getInt(KEY_FOLDER_MAX_COLUMNS, 3);
+        mFolderRows      = Xprefs.getInt(KEY_FOLDER_MAX_ROWS, 3);
+        mFolderPreview   = Xprefs.getBoolean(KEY_REARRANGE_PREVIEW, false);
 
         if (key.length > 0 && KEY_HIDE_SCROLLER.equals(key[0])) {
             updateFastScroll();
@@ -625,7 +638,7 @@ public class LauncherMod extends XposedMods {
         }
     }
 
-    // ── Riordina Layout Drawer (colonne del cassetto app) ───────────────────────────────────
+    // ── Riordina Layout Drawer (colonne del cassetto app) + Cartelle (colonne/righe/anteprima) ──
     private void hookDrawerColumns(XC_LoadPackage.LoadPackageParam lpparam) {
         ClassLoader cl = lpparam.classLoader;
 
@@ -638,6 +651,17 @@ public class LauncherMod extends XposedMods {
                         if (mRearrangeDrawer) setIntField(param.thisObject, "numAllAppsColumns", mDrawerColumns);
                     } catch (Throwable t) {
                         log("hookDrawerColumns (GridOption) failed: " + t);
+                    }
+                    try {
+                        if (mRearrangeFolder) {
+                            setIntField(param.thisObject, "numFolderColumns", mFolderColumns);
+                            setIntField(param.thisObject, "numFolderRows", mFolderRows);
+                        }
+                        if (mFolderPreview && mFolderColumns > 3) {
+                            setIntField(param.thisObject, "numFolderPreview", mFolderColumns);
+                        }
+                    } catch (Throwable t) {
+                        log("hookFolderLayout (GridOption) failed: " + t);
                     }
                 }
             });
@@ -655,6 +679,40 @@ public class LauncherMod extends XposedMods {
             });
         } catch (Throwable t) {
             log("AllAppsParam not found: " + t);
+        }
+
+        // Anteprima cartella (icona chiusa) — mostra righe/colonne piene invece della miniatura
+        // 2x2 di default, solo per le cartelle con un singolo item 1x1.
+        try {
+            Class<?> folderInfo = findClass("com.android.launcher3.model.data.FolderInfo", cl);
+            hookAllMethods(folderInfo, "getPreviewRow", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    try {
+                        if (!mFolderPreview) return;
+                        int spanX = getIntField(param.thisObject, "spanX");
+                        int spanY = getIntField(param.thisObject, "spanY");
+                        if (spanX == 1 && spanY == 1) param.setResult(mFolderRows);
+                    } catch (Throwable t) {
+                        log("hookFolderLayout (getPreviewRow) failed: " + t);
+                    }
+                }
+            });
+            hookAllMethods(folderInfo, "getPreviewColumn", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    try {
+                        if (!mFolderPreview) return;
+                        int spanX = getIntField(param.thisObject, "spanX");
+                        int spanY = getIntField(param.thisObject, "spanY");
+                        if (spanX == 1 && spanY == 1) param.setResult(mFolderColumns);
+                    } catch (Throwable t) {
+                        log("hookFolderLayout (getPreviewColumn) failed: " + t);
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            log("FolderInfo not found: " + t);
         }
     }
 

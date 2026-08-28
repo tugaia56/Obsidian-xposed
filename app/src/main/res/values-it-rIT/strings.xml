@@ -351,6 +351,7 @@
     <string name="drawer">Drawer</string>
     <string name="launcher_drawer_edit_columns">Modifica colonne</string>
     <string name="drawer_columns">Colonne</string>
+    <string name="dock_section_title">Dock</string>
     <string name="dock_background">Sfondo dock</string>
     <string name="dock_background_summary">Usane una alla volta — questa ha la priorità su Materiale se sono attive entrambe</string>
     <string name="dock_background_material">Sfondo dock materiale avanzato</string>

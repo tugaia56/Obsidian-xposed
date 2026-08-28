@@ -152,11 +152,11 @@ public class LauncherFragment extends Fragment {
         // ── Folder Layout ────────────────────────────────────────────────────
         chain.add(new SectionTitleAdapter(List.of(getString(R.string.launcher_folder_layout))));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_folder_edit_layout, null, KEY_REARRANGE_FOLDER, false))));
-        chain.add(sliderRow(getString(R.string.launcher_folder_columns), KEY_FOLDER_MAX_COLUMNS, 3, 7, 3, false));
-        chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3, false));
+                boolItem(R.string.launcher_folder_edit_layout, null, KEY_REARRANGE_FOLDER))));
+        chain.add(sliderRow(getString(R.string.launcher_folder_columns), KEY_FOLDER_MAX_COLUMNS, 3, 7, 3));
+        chain.add(sliderRow(getString(R.string.launcher_folder_rows), KEY_FOLDER_MAX_ROWS, 3, 7, 3));
         chain.add(new SwitchWidgetAdapter(List.of(
-                boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW, false),
+                boolItem(R.string.launcher_folder_update_preview, null, KEY_REARRANGE_PREVIEW),
                 boolItem(R.string.remove_folder_pagination_title, null, KEY_REMOVE_FOLDER_PAGE))));
 
         // ── Drawer ───────────────────────────────────────────────────────────
@@ -168,6 +168,7 @@ public class LauncherFragment extends Fragment {
                 boolItem(R.string.hide_app_labels, R.string.hide_app_labels_drawer, KEY_DRAWER_HIDE_LABELS))));
 
         // ── Dock background (sub-screen) ────────────────────────────────────
+        chain.add(new SectionTitleAdapter(List.of(getString(R.string.dock_section_title))));
         chain.add(new ListWidgetAdapter(List.of(new ListWidgetAdapter.ListItem(
                 getString(R.string.dock_background), null,
                 () -> navigate(new LauncherDockBackgroundFragment(), getString(R.string.dock_background))))));
