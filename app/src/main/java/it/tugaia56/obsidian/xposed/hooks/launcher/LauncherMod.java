@@ -11,6 +11,7 @@ import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.getStaticIntField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
 import static de.robv.android.xposed.XposedHelpers.setBooleanField;
+import static de.robv.android.xposed.XposedHelpers.setStaticBooleanField;
 import static it.tugaia56.obsidian.utils.Constants.Packages.LAUNCHER;
 import static it.tugaia56.obsidian.xposed.XPrefs.Xprefs;
 import static it.tugaia56.obsidian.xposed.utils.ViewHelper.dp2px;
@@ -27,6 +28,7 @@ import android.view.ViewTreeObserver;
 import android.widget.Toast;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import it.tugaia56.obsidian.xposed.XposedMods;
 
@@ -487,7 +489,17 @@ public class LauncherMod extends XposedMods {
             hookAllMethods(featureOption, "updateSupportShelfAssistant", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (mCustomShelfBehavior) setBooleanField(param.thisObject, "sShelfAssistantEnable", mShelfBehavior == 0);
+                    if (!mCustomShelfBehavior) return;
+                    try {
+                        if (param.thisObject != null) {
+                            setBooleanField(param.thisObject, "sShelfAssistantEnable", mShelfBehavior == 0);
+                        } else {
+                            // Some OOS versions expose a static overload of this method.
+                            setStaticBooleanField(featureOption, "sShelfAssistantEnable", mShelfBehavior == 0);
+                        }
+                    } catch (Throwable t) {
+                        log("hookSwipeRightBehavior (updateSupportShelfAssistant) failed: " + t);
+                    }
                 }
             });
         } catch (Throwable t) {
@@ -502,11 +514,13 @@ public class LauncherMod extends XposedMods {
 
         try {
             Class<?> oplusHotseat = findClass("com.android.launcher3.OplusHotseat", cl);
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] OplusHotseat hook attached OK");
 
             hookAllMethods(oplusHotseat, "init", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
+                        XposedBridge.log("[ Obsidian - LauncherMod DIAG ] OplusHotseat.init called, bg=" + mDockBackground + " material=" + mDockBackgroundMaterial);
                         if (mDockBackground) {
                             callMethod(param.thisObject, "setDockerBackground");
                         } else if (mDockBackgroundMaterial) {
@@ -547,6 +561,7 @@ public class LauncherMod extends XposedMods {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
+                        XposedBridge.log("[ Obsidian - LauncherMod DIAG ] OplusHotseat.onDraw called, bg=" + mDockBackground + " material=" + mDockBackgroundMaterial);
                         if (mDockBackground) {
                             callMethod(param.thisObject, "setDockerBackground");
                         } else if (!mDockBackgroundMaterial) {
@@ -561,7 +576,7 @@ public class LauncherMod extends XposedMods {
                 }
             });
         } catch (Throwable t) {
-            log("OplusHotseat not found: " + t);
+            XposedBridge.log("[ Obsidian - LauncherMod DIAG ] OplusHotseat not found: " + t);
         }
     }
 
