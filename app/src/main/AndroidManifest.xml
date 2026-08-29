@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Notifica "nuova versione disponibile" del controllo automatico aggiornamenti (WorkManager). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Posizione GPS per il Meteo (SdB/AOD) — richiesta da qui (processo Obsidian), non dal
          Mod: SystemUI stesso non ha ACCESS_FINE_LOCATION (verificato via dumpsys, nessuna riga
          per com.android.systemui), quindi la posizione va presa qui e passata via ObsidianPrefs

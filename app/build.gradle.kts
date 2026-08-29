@@ -112,4 +112,5 @@ dependencies {
     implementation(libs.android.biometric)
     implementation(libs.lottie)
     implementation(libs.bcpkix)
+    implementation(libs.work.runtime)
 }
