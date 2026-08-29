@@ -20,6 +20,8 @@ import android.graphics.Outline;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
@@ -203,6 +205,18 @@ public class QsTilesCustomizeMod extends XposedMods {
     private Object mPersonalityManager;
     private Class<?> mForegroundBlurParamClass;
     private final List<Object> mSeekBarInstances = new ArrayList<>();
+
+    // Mitigazione BUG 2026-08-29: qualcosa (probabilmente il "Personality"/color-from-wallpaper
+    // di OOS, non ancora identificato con certezza) sovrascrive di nuovo il tint di default
+    // POCO DOPO che il nostro hook lo ha già colorato correttamente — confermato via log: 100+
+    // applyIconColorTo "APPLIED" durante il burst iniziale di binding dopo un riavvio SystemUI,
+    // eppure lo screenshot qualche secondo più tardi mostra di nuovo i colori stock. Finché non
+    // si trova il vero punto che sovrascrive, si vince "per ultimo" riapplicando i colori un
+    // paio di volte con un piccolo ritardo dopo che il burst di binding si è calmato (ogni
+    // setIcon() riprogramma il timer, quindi scatta solo quando i tocchi si fermano davvero).
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mDelayedRefresh1 = this::refreshCachedIconColors;
+    private final Runnable mDelayedRefresh2 = this::refreshCachedIconColors;
 
     public QsTilesCustomizeMod(Context context) { super(context); }
 
@@ -680,6 +694,12 @@ public class QsTilesCustomizeMod extends XposedMods {
                         try {
                             int state = getIntField(p.args[0], "state");
                             mTileStateCache.put(p.thisObject, state);
+                            // Riprogramma i due refresh ritardati ad ogni nuovo bind — scattano
+                            // solo quando il burst di binding si placa davvero (vedi nota sopra).
+                            mMainHandler.removeCallbacks(mDelayedRefresh1);
+                            mMainHandler.removeCallbacks(mDelayedRefresh2);
+                            mMainHandler.postDelayed(mDelayedRefresh1, 800);
+                            mMainHandler.postDelayed(mDelayedRefresh2, 2500);
                         } catch (Throwable ignored) {}
                     }
                 });
@@ -712,16 +732,20 @@ public class QsTilesCustomizeMod extends XposedMods {
     }
 
     // BUG RISOLTO 2026-08-29 ("colore icone perso dopo riavvio SystemUI", vedi
-    // project_qs_icon_refresh_bug): notifyQsUpdate() da solo dipende da mPersonalityManager,
-    // che potrebbe non esistere ancora appena dopo un riavvio (catturato solo al primo
-    // costruttore reale, timing non garantito rispetto a quando i pref sono pronti). Se un
-    // riquadro si era già disegnato PRIMA che updatePrefs() girasse la prima volta (colore
-    // default "cotto dentro"), il refresh via PersonalityManager può fallire silenziosamente
-    // e il riquadro resta scolorito finché qualcos'altro non lo ridisegna (es. un tocco).
-    // Fix: mTileStateCache è già popolata ad OGNI chiamata di setIcon(), indipendentemente da
-    // mIconColorsOn — quindi appena l'utente ha visto il pannello QS anche solo una volta,
-    // ogni vista icona nota è recuperabile da qui. Riapplichiamo il colore corrente
-    // direttamente su ognuna, bypassando del tutto la dipendenza da PersonalityManager.
+    // project_qs_icon_refresh_bug). Due cause reali trovate, entrambe corrette qui:
+    // 1) Il refresh forzato originale (notifyQsUpdate()) dipendeva solo da mPersonalityManager,
+    //    non garantito esistere ancora appena dopo un riavvio — refreshCachedIconColors() qui
+    //    sotto bypassa quella dipendenza del tutto, riapplicando il colore corrente a ogni
+    //    iconView già vista (mTileStateCache, popolata ad OGNI setIcon() indipendentemente da
+    //    mIconColorsOn) invece di sperare che PersonalityManager esista.
+    // 2) Anche con (1) risolto, un secondo effetto — confermato via log diagnostici live: 100+
+    //    chiamate "applicato" durante il burst iniziale di binding, eppure lo screenshot
+    //    qualche secondo dopo mostrava di nuovo colori stock — mostra che QUALCOSA (probabile
+    //    il sistema "Personality"/colore-da-sfondo di OOS, mai identificato con certezza)
+    //    sovrascrive di nuovo il tint POCO DOPO che l'abbiamo già applicato correttamente.
+    //    Mitigazione: ogni setIcon() riprogramma due refresh ritardati (mDelayedRefresh1/2,
+    //    vedi campi sopra) che scattano solo quando il burst di binding si placa — vincono
+    //    "per ultimo" contro qualunque cosa stia sovrascrivendo, senza sapere cos'è davvero.
     private void refreshCachedIconColors() {
         for (Object iconViewInstance : new ArrayList<>(mTileStateCache.keySet())) {
             applyIconColorTo(iconViewInstance, "refresh");
