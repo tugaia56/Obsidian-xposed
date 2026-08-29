@@ -82,6 +82,11 @@
     <string name="systemui_theme_notice">Themes system-wide dialogs, toasts and popups (colors, backgrounds) using the resource bundle extracted from your own Substratum theme. Tap Apply (needs a moment to build). Requires "All files access" permission.</string>
     <string name="systemui_theme_card_title">Substratum Theme</string>
     <string name="systemui_theme_card_desc">Dialogs, toasts, popups</string>
+    <string name="nav_launcher_theme">Launcher Style</string>
+    <string name="nav_launcher_theme_summary">Real theme for the launcher\'s own dialogs and popups, built from your Substratum theme</string>
+    <string name="launcher_theme_notice">Themes the launcher\'s own dialogs, toolbars and popups (colors, backgrounds) using the resource bundle extracted from your own Substratum theme — not the wallpaper/icons, the launcher\'s own settings/wallpaper-picker screens. Tap Apply (needs a moment to build). Requires "All files access" permission.</string>
+    <string name="launcher_theme_card_title">Substratum Theme</string>
+    <string name="launcher_theme_card_desc">Dialogs, toolbars, popups</string>
 
     <!-- Section PIN -->
     <string name="section_pin_style">PIN Keyguard</string>

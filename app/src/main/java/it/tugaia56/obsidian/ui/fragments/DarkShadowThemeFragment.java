@@ -38,9 +38,6 @@ public class DarkShadowThemeFragment extends Fragment {
         "DSTCPB1", "DSTCPB2", "DSTCPB3", "DSTCPB4", "DSTCPB5"
     };
 
-    private static final int ACCENT_BG = 0xFF7C4DFF; // purple
-    private static final int ACCENT_AC = 0xFFE91E63; // pink
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -68,7 +65,6 @@ public class DarkShadowThemeFragment extends Fragment {
                         bgPreset != null ? bgPreset : getString(R.string.dst_none),
                         () -> navigate(new DstBackgroundFragment(),
                                 getString(R.string.dst_section_preset_sfondo)),
-                        ACCENT_BG,
                         "sfondo", "background", "colore", "color"),
 
                 new NavAdapter.NavItem(
@@ -77,7 +73,6 @@ public class DarkShadowThemeFragment extends Fragment {
                         acPreset != null ? acPreset : getString(R.string.dst_none),
                         () -> navigate(new DstAccentFragment(),
                                 getString(R.string.dst_section_preset_accent)),
-                        ACCENT_AC,
                         "accento", "accent", "colore", "color"),
 
                 new NavAdapter.NavItem(
@@ -86,7 +81,6 @@ public class DarkShadowThemeFragment extends Fragment {
                         getString(R.string.nav_sys_settings_summary),
                         () -> navigate(new SettingsThemeFragment(),
                                 getString(R.string.nav_sys_settings)),
-                        0xFF2196F3, // blue
                         "impostazioni", "settings", "tema", "theme", "substratum", "impronte", "fingerprint"),
 
                 new NavAdapter.NavItem(
@@ -95,8 +89,15 @@ public class DarkShadowThemeFragment extends Fragment {
                         getString(R.string.nav_sui_theme_summary),
                         () -> navigate(new SystemUIThemeFragment(),
                                 getString(R.string.nav_sui_theme)),
-                        0xFF00BCD4, // cyan
                         "systemui", "dialoghi", "dialog", "toast", "popup", "tema", "theme", "substratum"),
+
+                new NavAdapter.NavItem(
+                        R.drawable.ic_drawing,
+                        getString(R.string.nav_launcher_theme),
+                        getString(R.string.nav_launcher_theme_summary),
+                        () -> navigate(new LauncherThemeFragment(),
+                                getString(R.string.nav_launcher_theme)),
+                        "launcher", "dialoghi", "dialog", "toolbar", "popup", "tema", "theme", "substratum"),
 
                 new NavAdapter.NavItem(
                         R.drawable.ic_lock,
@@ -104,7 +105,6 @@ public class DarkShadowThemeFragment extends Fragment {
                         getString(R.string.section_pin_style_summary),
                         () -> navigate(new PinStyleFragment(),
                                 getString(R.string.section_pin_style)),
-                        0xFF4CAF50, // green
                         "codice", "password", "numeri", "numbers", "puntini", "dots"),
 
                 new NavAdapter.NavItem(
@@ -112,12 +112,11 @@ public class DarkShadowThemeFragment extends Fragment {
                         getString(R.string.dark_shadow_preset_cpb),
                         getString(R.string.nav_cpb_summary),
                         this::showCpbPresetDialog,
-                        0xFF4CAF50, // green
                         "barra", "caricamento", "loading", "spinner", "progress",
                         "progresso", "animazione", "circolare")
         );
 
-        rv.setAdapter(new NavAdapter(items));
+        rv.setAdapter(new NavAdapter(items, 0xFF7C4DFF)); // purple, colore categoria "Obsidian Theme"
     }
 
     // ── Barra Progresso Circolare ─────────────────────────────────────────────

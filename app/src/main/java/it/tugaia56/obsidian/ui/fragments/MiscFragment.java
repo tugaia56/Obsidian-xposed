@@ -29,8 +29,6 @@ import it.tugaia56.obsidian.utils.ObsidianPrefs;
  */
 public class MiscFragment extends Fragment {
 
-    private static final int ACCENT_POWER    = 0xFFFF9800; // amber
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -82,10 +80,9 @@ public class MiscFragment extends Fragment {
                         getString(R.string.nav_misc_power_menu),
                         getString(R.string.nav_misc_power_menu_summary),
                         () -> navigate(new PowerMenuFragment(),
-                                getString(R.string.nav_misc_power_menu)),
-                        ACCENT_POWER)
+                                getString(R.string.nav_misc_power_menu)))
         );
-        rv.setAdapter(new ConcatAdapter(togglesAdapter, new NavAdapter(items)));
+        rv.setAdapter(new ConcatAdapter(togglesAdapter, new NavAdapter(items, 0xFFFF6E40))); // deep orange accent, colore categoria "Varie"
     }
 
     private void navigate(Fragment fragment, String title) {

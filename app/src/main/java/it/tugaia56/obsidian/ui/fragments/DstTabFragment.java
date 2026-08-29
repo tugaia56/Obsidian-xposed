@@ -64,6 +64,7 @@ public class DstTabFragment extends Fragment {
                         getString(R.string.nav_dst_colors_summary),
                         () -> navigate(new DarkShadowThemeFragment(),
                                 getString(R.string.nav_dst_colors)),
+                        0xFF7C4DFF, // purple
                         "substratum", "tema", "theme", "accento", "accent",
                         "sfondo", "background", "colore", "color", "impostazioni", "settings"),
 
@@ -84,7 +85,7 @@ public class DstTabFragment extends Fragment {
                         getString(R.string.nav_settings_icons_summary),
                         () -> navigate(new SettingsIconsFragment(),
                                 getString(R.string.nav_settings_icons)),
-                        0xFF673AB7, // deep purple — anteprima-only, ma non più grigio
+                        0xFFFF1744, // red accent — anteprima-only, ma non più grigio
                         "pui", "oos", "icone", "icons", "impostazioni", "settings", "pack"),
 
                 new NavAdapter.NavItem(

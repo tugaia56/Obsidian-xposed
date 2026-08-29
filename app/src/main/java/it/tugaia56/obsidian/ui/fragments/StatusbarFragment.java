@@ -69,7 +69,7 @@ public class StatusbarFragment extends Fragment {
                 () -> navigate(new StatusbarNotifsFragment(),
                         getString(R.string.section_statusbar_notifs))));
 
-        mNavAdapter = new NavAdapter(mNavItems);
+        mNavAdapter = new NavAdapter(mNavItems, 0xFF7C4DFF); // purple, colore categoria "Barra di Stato"
 
         // ── Icon switches inline ──────────────────────────────────────────────
         SectionTitleAdapter iconSection = new SectionTitleAdapter(

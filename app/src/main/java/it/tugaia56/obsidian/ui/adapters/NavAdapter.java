@@ -77,10 +77,24 @@ public class NavAdapter extends RecyclerView.Adapter<NavAdapter.VH> {
 
     private final List<NavItem> fullItems;
     private List<NavItem> filteredItems;
+    /** -1 = nessun default condiviso, ogni riga senza colore proprio ricade sulla vecchia
+     *  lista posizionale ACCENT_COLORS. Impostato dal costruttore a 2 argomenti per far
+     *  ereditare a tutte le righe senza colore esplicito il colore della categoria genitore
+     *  (vedi [[project_category_color_propagation]]) invece del ciclo di 5 colori fissi. */
+    private final int sharedDefaultAccent;
 
     public NavAdapter(List<NavItem> items) {
-        this.fullItems      = new ArrayList<>(items);
-        this.filteredItems  = new ArrayList<>(items);
+        this(items, -1);
+    }
+
+    /** @param defaultAccent colore ereditato da ogni NavItem che non ne specifica uno proprio
+     *  (accentColor == -1) — tipicamente il colore della categoria genitore in cui questa
+     *  schermata è annidata, così le sotto-schermate restano coerenti col colore con cui
+     *  l'utente è entrato invece di mostrare un ciclo di colori scollegato. */
+    public NavAdapter(List<NavItem> items, int defaultAccent) {
+        this.fullItems           = new ArrayList<>(items);
+        this.filteredItems       = new ArrayList<>(items);
+        this.sharedDefaultAccent = defaultAccent;
     }
 
     /**
@@ -121,8 +135,10 @@ public class NavAdapter extends RecyclerView.Adapter<NavAdapter.VH> {
     public void onBindViewHolder(@NonNull VH h, int pos) {
         NavItem item = filteredItems.get(pos);
 
-        // Per-item accent colour — item can override the positional default
+        // Per-item accent colour — item's own color wins, then the shared category default
+        // (see [[project_category_color_propagation]]), then the old positional fallback.
         int accent = (item.accentColor != -1) ? item.accentColor
+                   : (sharedDefaultAccent != -1) ? sharedDefaultAccent
                    : (pos < ACCENT_COLORS.length ? ACCENT_COLORS[pos] : 0xFF6200EE);
 
         float dp = h.itemView.getContext().getResources().getDisplayMetrics().density;

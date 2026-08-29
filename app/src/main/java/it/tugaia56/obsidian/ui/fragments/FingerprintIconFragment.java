@@ -40,9 +40,6 @@ import it.tugaia56.obsidian.xposed.hooks.systemui.FingerprintIconMods;
  */
 public class FingerprintIconFragment extends Fragment {
 
-    private static final int ACCENT_PRESETS = 0xFF00BCD4; // cyan
-    private static final int ACCENT_CUSTOM  = 0xFFE91E63; // pink
-
     private ActivityResultLauncher<String> mImagePicker;
 
     @Override
@@ -92,16 +89,14 @@ public class FingerprintIconFragment extends Fragment {
                 new NavAdapter.NavItem(
                         R.drawable.ic_lock,
                         getString(R.string.lockscreen_fp_icon_title), null,
-                        () -> navigate(new FingerprintPresetFragment(), getString(R.string.lockscreen_fp_icon_title)),
-                        ACCENT_PRESETS),
+                        () -> navigate(new FingerprintPresetFragment(), getString(R.string.lockscreen_fp_icon_title))),
                 new NavAdapter.NavItem(
                         R.drawable.ic_lock,
                         getString(R.string.lockscreen_fp_icon_picker_title),
                         getString(R.string.lockscreen_fp_icon_picker_summary),
-                        () -> mImagePicker.launch("image/*"),
-                        ACCENT_CUSTOM)
+                        () -> mImagePicker.launch("image/*"))
         );
-        NavAdapter navAdapter = new NavAdapter(navItems);
+        NavAdapter navAdapter = new NavAdapter(navItems, 0xFF00BCD4); // cyan, colore categoria "Schermata di Blocco"
 
         SliderWidgetAdapter scaleAdapter = scaleRow();
 

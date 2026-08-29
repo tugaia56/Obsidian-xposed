@@ -89,7 +89,7 @@ public class VolumeStyleFragment extends Fragment {
                                 getString(R.string.vol_panel_section)))
         );
 
-        ((RecyclerView) view).setAdapter(new NavAdapter(items));
+        ((RecyclerView) view).setAdapter(new NavAdapter(items, 0xFF536DFE)); // indigo accent, colore categoria "Pannello Volume"
     }
 
     // ── Preset dialog ─────────────────────────────────────────────────────────

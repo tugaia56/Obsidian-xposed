@@ -67,7 +67,7 @@ public class QsFragment extends Fragment {
                                 ? getString(R.string.enabled) : getString(R.string.disabled),
                         () -> navigate(new QsHeaderClockFragment(),
                                 getString(R.string.qs_header_clock_section)))
-        ));
+        ), 0xFFE91E63); // pink, colore categoria "Pannello Impostazioni Rapide"
 
         rv.setAdapter(adapter);
     }

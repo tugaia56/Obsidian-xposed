@@ -141,7 +141,7 @@ public class ClockDateFragment extends Fragment {
                         getString(R.string.nav_clock_date),
                         getString(R.string.nav_clock_date_summary),
                         () -> navigate(new ClockOraDataFragment(), getString(R.string.nav_clock_date)))
-        ));
+        ), 0xFF7C4DFF); // purple, colore categoria "Barra di Stato"
 
         rv.setAdapter(new ConcatAdapter(
                 new SectionTitleAdapter(List.of(getString(R.string.section_clock_date))),

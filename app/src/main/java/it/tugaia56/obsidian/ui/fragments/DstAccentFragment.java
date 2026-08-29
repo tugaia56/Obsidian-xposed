@@ -120,7 +120,7 @@ public class DstAccentFragment extends Fragment {
                         getString(R.string.nav_system_colors),
                         getString(R.string.nav_system_colors_summary),
                         () -> navigate(new SystemColorsFragment(), getString(R.string.nav_system_colors)),
-                        0xFFE91E63, // pink
+                        0xFF7C4DFF, // purple, colore categoria "Obsidian Theme"
                         "monet", "colore", "color", "accento", "accent",
                         "sistema", "system", "material you")
         ));

@@ -94,7 +94,7 @@ public class QuickSettingsFragment extends Fragment {
                 getString(R.string.nav_quick_settings),
                 getString(R.string.nav_quick_settings_summary),
                 () -> navigate(new QsFragment(), getString(R.string.nav_quick_settings)),
-                0xFF00BCD4)))); // cyan, stesso colore di prima
+                0xFFE91E63)))); // pink, colore categoria "Pannello Impostazioni Rapide"
 
         // ── Quick Settings Tiles ──────────────────────────────────────────────
         // "Numero di riquadri" reale (porting di OC's QSTiles); il resto resta
@@ -105,19 +105,19 @@ public class QuickSettingsFragment extends Fragment {
                 getString(R.string.quick_settings_tiles_number),
                 getString(R.string.qs_tiles_customize),
                 () -> navigate(new QsTilesFragment(), getString(R.string.quick_settings_tiles_number)),
-                0xFF00BCD4))));
+                0xFFE91E63))));
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
                 R.drawable.ic_qs,
                 getString(R.string.quick_settings_tiles_main),
                 getString(R.string.qs_tiles_customize_summary),
                 () -> navigate(new QsTilesCustomizeFragment(), getString(R.string.quick_settings_tiles_main)),
-                0xFF00BCD4))));
+                0xFFE91E63))));
         chain.add(new NavAdapter(List.of(new NavAdapter.NavItem(
                 R.drawable.ic_qs,
                 getString(R.string.quick_settings_widgets),
                 getString(R.string.qs_widgets_nav_summary),
                 () -> navigate(new QsWidgetsFragment(), getString(R.string.quick_settings_widgets)),
-                0xFF00BCD4))));
+                0xFFE91E63))));
         // "Impostazioni Rapide Separati" (QsSeparateMod) spostato dentro "Personalizza
         // Riquadri" il 2026-08-20 come sezione inline (solo pulsanti/larghezza tendina
         // rimasti davvero esclusivi di quello stile) — niente più card qui.

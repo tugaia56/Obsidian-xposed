@@ -55,9 +55,6 @@ public class ThemeStyleFragment extends Fragment {
         "DSTDMT", "DSTDMTO", "DSTDS",  "DSTDSO"
     };
 
-    // Yellow accent for the dialog-style NavItem
-    private static final int COLOR_YELLOW = 0xFFFFEB3B;
-
     // Dialog-style item index in mNavItems (for refresh after picker)
     private static final int IDX_DLG = 3;
 
@@ -142,10 +139,9 @@ public class ThemeStyleFragment extends Fragment {
                 R.drawable.ic_ui_styles,
                 getString(R.string.nav_dialog_style),
                 getDlgPresetLabel(),
-                this::showDialogStylePresetDialog,
-                COLOR_YELLOW));
+                this::showDialogStylePresetDialog));
 
-        mNavAdapter = new NavAdapter(mNavItems);
+        mNavAdapter = new NavAdapter(mNavItems, 0xFF00BCD4); // cyan, colore categoria "Stili Notifica e Toast"
         rv.setAdapter(new ConcatAdapter(headerAdapter, mNavAdapter));
     }
 
@@ -463,8 +459,7 @@ public class ThemeStyleFragment extends Fragment {
                 R.drawable.ic_ui_styles,
                 getString(R.string.nav_dialog_style),
                 getDlgPresetLabel(),
-                this::showDialogStylePresetDialog,
-                COLOR_YELLOW));
+                this::showDialogStylePresetDialog));
         mNavAdapter.notifyItemChanged(IDX_DLG);
     }
 

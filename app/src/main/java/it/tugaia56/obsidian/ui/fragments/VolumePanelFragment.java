@@ -53,7 +53,7 @@ public class VolumePanelFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         buildItems();
-        mAdapter = new NavAdapter(mNavItems);
+        mAdapter = new NavAdapter(mNavItems, 0xFF536DFE); // indigo accent, colore categoria "Pannello Volume"
         ((RecyclerView) view).setAdapter(mAdapter);
     }
 

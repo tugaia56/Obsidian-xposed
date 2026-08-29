@@ -85,6 +85,7 @@ public class GestioneModsTabFragment extends Fragment {
                         getString(R.string.nav_lock_screen_summary),
                         () -> navigate(new LockScreenFragment(),
                                 getString(R.string.nav_lock_screen)),
+                        0xFF00BCD4, // cyan
                         "schermata di blocco", "lock screen", "codice", "pin",
                         "password", "numeri", "numbers", "puntini", "dots",
                         "orologio", "clock", "impronta", "fingerprint", "pulsanti", "buttons"),
@@ -105,7 +106,7 @@ public class GestioneModsTabFragment extends Fragment {
                         getString(R.string.nav_volume_icon_summary),
                         () -> navigate(new VolumeStyleFragment(),
                                 getString(R.string.dark_shadow_preset_rvd)),
-                        0xFF3F51B5, // indigo
+                        0xFF536DFE, // indigo accent (più brillante)
                         "volume", "suono", "audio", "slider", "timeout",
                         "posizione", "position", "colore", "color"),
 
@@ -124,7 +125,7 @@ public class GestioneModsTabFragment extends Fragment {
                         getString(R.string.nav_misc_summary),
                         () -> navigate(new MiscFragment(),
                                 getString(R.string.nav_misc)),
-                        0xFF795548, // brown
+                        0xFFFF6E40, // deep orange accent (più brillante)
                         "varie", "misc", "rotazione", "rotation", "usb",
                         "accensione", "power menu", "impostazioni", "settings"),
 

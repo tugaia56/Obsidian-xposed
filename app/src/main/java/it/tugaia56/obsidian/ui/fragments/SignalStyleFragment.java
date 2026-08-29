@@ -51,9 +51,6 @@ import it.tugaia56.obsidian.xposed.hooks.systemui.DstWifiIconStyle;
  */
 public class SignalStyleFragment extends Fragment {
 
-    private static final int ACCENT_WIFI    = 0xFF00BCD4; // cyan — matches "Icone Segnale" entry
-    private static final int ACCENT_SIGNAL  = 0xFF4CAF50; // green
-
     // colorItems[0] = Wi-Fi, colorItems[1] = Mobile
     private final List<DarkShadowItem> colorItems = new ArrayList<>();
     private DarkShadowColorListener mColorAdapter;
@@ -89,15 +86,13 @@ public class SignalStyleFragment extends Fragment {
                 R.drawable.obs_wifi_aurora_signal_4,
                 getString(R.string.nav_wifi_icons),
                 getString(R.string.nav_wifi_icons_summary),
-                () -> navigate(new WifiIconsFragment(), getString(R.string.nav_wifi_icons)),
-                ACCENT_WIFI));
+                () -> navigate(new WifiIconsFragment(), getString(R.string.nav_wifi_icons))));
         navItems.add(new NavAdapter.NavItem(
                 R.drawable.obs_signal_bars_3,
                 getString(R.string.nav_signal_icons),
                 getString(R.string.nav_signal_icons_summary),
-                () -> navigate(new SignalIconsFragment(), getString(R.string.nav_signal_icons)),
-                ACCENT_SIGNAL));
-        NavAdapter navAdapter = new NavAdapter(navItems);
+                () -> navigate(new SignalIconsFragment(), getString(R.string.nav_signal_icons))));
+        NavAdapter navAdapter = new NavAdapter(navItems, 0xFF4CAF50); // green, colore categoria "Stile icone Segnale"
 
         // ── Colore Icona Segnale — separate Wi-Fi / Mobile rows ────────────────────
         colorItems.clear();

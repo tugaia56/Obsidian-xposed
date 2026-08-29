@@ -82,6 +82,11 @@
     <string name="systemui_theme_notice">Tema dialoghi, toast e popup di sistema (colori, sfondi) usando il bundle di risorse estratto dal tuo tema Substratum. Tocca Applica (richiede qualche istante per compilarlo). Richiede il permesso "Accesso a tutti i file".</string>
     <string name="systemui_theme_card_title">Tema Substratum</string>
     <string name="systemui_theme_card_desc">Dialoghi, toast, popup</string>
+    <string name="nav_launcher_theme">Stile Launcher</string>
+    <string name="nav_launcher_theme_summary">Tema reale per dialoghi e popup del launcher, ricostruito dal tuo tema Substratum</string>
+    <string name="launcher_theme_notice">Tema dialoghi, toolbar e popup del launcher (colori, sfondi) usando il bundle di risorse estratto dal tuo tema Substratum — non lo sfondo/le icone, le schermate di impostazioni/scelta sfondo del launcher stesso. Tocca Applica (richiede qualche istante per compilarlo). Richiede il permesso "Accesso a tutti i file".</string>
+    <string name="launcher_theme_card_title">Tema Substratum</string>
+    <string name="launcher_theme_card_desc">Dialoghi, toolbar, popup</string>
 
     <!-- Sezione PIN -->
     <string name="section_pin_style">Tastierino PIN</string>

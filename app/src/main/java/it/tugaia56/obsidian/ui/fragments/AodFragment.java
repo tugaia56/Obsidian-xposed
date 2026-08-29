@@ -24,10 +24,6 @@ import it.tugaia56.obsidian.ui.adapters.NavAdapter;
  */
 public class AodFragment extends Fragment {
 
-    private static final int ACCENT_CLOCK   = 0xFF00BCD4; // cyan
-    private static final int ACCENT_WEATHER = 0xFF4CAF50; // green
-    private static final int ACCENT_EDGE    = 0xFFFF9800; // amber
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -52,26 +48,23 @@ public class AodFragment extends Fragment {
                         getString(R.string.nav_aod_clock),
                         getString(R.string.nav_aod_clock_summary),
                         () -> navigate(new AodClockFragment(),
-                                getString(R.string.nav_aod_clock)),
-                        ACCENT_CLOCK),
+                                getString(R.string.nav_aod_clock))),
 
                 new NavAdapter.NavItem(
                         R.drawable.ic_palette,
                         getString(R.string.nav_aod_weather),
                         getString(R.string.nav_aod_weather_summary),
                         () -> navigate(new AodWeatherFragment(),
-                                getString(R.string.nav_aod_weather)),
-                        ACCENT_WEATHER),
+                                getString(R.string.nav_aod_weather))),
 
                 new NavAdapter.NavItem(
                         R.drawable.ic_drawing,
                         getString(R.string.nav_aod_edge_lighting),
                         getString(R.string.nav_aod_edge_lighting_summary),
                         () -> navigate(new AodEdgeLightFragment(),
-                                getString(R.string.nav_aod_edge_lighting)),
-                        ACCENT_EDGE)
+                                getString(R.string.nav_aod_edge_lighting)))
         );
-        rv.setAdapter(new NavAdapter(items));
+        rv.setAdapter(new NavAdapter(items, 0xFFFF5722)); // deep orange, colore categoria "Always-On Display"
     }
 
     private void navigate(Fragment fragment, String title) {
