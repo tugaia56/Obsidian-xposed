@@ -199,9 +199,83 @@ public class QsWidgetsMod extends XposedMods {
         });
     }
 
+    // BUG ("colonna widget sovrapposta alla card media reale"): quando parte una riproduzione
+    // musicale vera, OOS ripopola questo stesso contenitore con la sua card nativa (copertina/
+    // controlli) SENZA richiamare onFinishInflate — la nostra griglia iniettata resta attaccata
+    // sopra e le due cose finiscono sovrapposte/sporche. Tentato prima l'approccio di OC
+    // (QsWidgets.java: fingere che "modalità media sia sempre attiva" così OOS non prova mai a
+    // iniettare la sua card) — non porta su questa build: confermato via log diagnostici che
+    // OOS16 usa un sistema completamente diverso ("Media Carousel Controller" con MediaHost
+    // separati, trovato decompilando SystemUI.apk vera) che non passa più dai vecchi
+    // setMediaMode/setQsMediaPanelShown che OC agganciava — mai nemmeno chiamati.
+    // Soluzione più semplice (proposta dall'utente): invece di litigare col nuovo sistema,
+    // cedergli il posto quando serve davvero. Primo tentativo con AudioManager.isMusicActive()
+    // — SBAGLIATO: torna false in pausa (OOS tiene comunque la card visibile) e resta false pure
+    // a riproduzione forza-chiusa (OOS mette in cache la copertina e non la ritira da sola,
+    // confermato dall'utente in test live) — "aspettare che se ne vada" non è un segnale
+    // affidabile. Fix reale: guardiamo direttamente cosa c'è DENTRO il contenitore ad ogni tick
+    // — se contiene una view che non è la nostra griglia, vuol dire che OOS ci ha messo la sua
+    // card e ci togliamo; se contiene solo la nostra griglia (o è vuoto), il posto è libero e la
+    // rimettiamo. Verità dal vivo invece di un segnale indiretto (audio) che può sbagliare.
+    // Controllo leggero, attivo SOLO mentre il pannello QS è davvero visibile
+    // (OnAttachStateChangeListener sul contenitore), non un timer permanente in background.
+    // Tentato anche un "margine di sicurezza + sfratto forzato" (mContainer.removeAllViews())
+    // per i casi di copertina "incollata" a tempo indeterminato — REVERTED 2026-08-29: sfrattare
+    // con removeAllViews() rompe qualcosa nello stato interno di OOS, che poi non riesce più a
+    // reiniettare la sua card nemmeno con musica vera in corso, per il resto della sessione
+    // SystemUI (confermato dall'utente in test live — molto peggio del difetto originale).
+    // Tentato anche un riavvio automatico di SystemUI (Process.killProcess(getpid()) dall'interno
+    // del suo stesso processo, stesso effetto del pulsante "Riavvia SystemUI") dopo il margine —
+    // REVERTED anche questo, stesso giorno: il timer partiva da quando appariva la card (non da
+    // quando l'audio si fermava davvero), quindi scattava appena l'utente metteva in PAUSA, non
+    // solo a app chiusa; e soprattutto la copertina restava incollata ANCHE dopo il riavvio,
+    // quindi il ciclo si ripeteva 3-4 volte di fila (schermo che sfarfalla ripetutamente) SENZA
+    // risolvere nulla — peggio del problema originale, confermato dall'utente in test live.
+    // Nessuna via automatica trovata per il caso "copertina incollata a tempo indeterminato" che
+    // non introduca un effetto collaterale peggiore — resta un limite noto e accettato: il
+    // riavvio SystemUI risolve sempre, ma va fatto manualmente (pulsante in app) quando serve.
+    // Restano solo le due reazioni sicure e testate (mollare/riprendersi il contenitore in base
+    // a cosa contiene davvero) — nessuna manipolazione di view non nostre, nessun riavvio.
+    private boolean mMediaCardPresent = false;
+    private final android.os.Handler mMediaPollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable mMediaPoll = new Runnable() {
+        @Override public void run() {
+            checkMediaCardState();
+            mMediaPollHandler.postDelayed(this, 1000);
+        }
+    };
+
+    private void checkMediaCardState() {
+        if (mContainer == null || !mEnabled) return;
+        boolean oosOwnsContainer = false;
+        for (int i = 0; i < mContainer.getChildCount(); i++) {
+            if (mContainer.getChildAt(i) != mGrid) { oosOwnsContainer = true; break; }
+        }
+        if (oosOwnsContainer == mMediaCardPresent) return;
+        mMediaCardPresent = oosOwnsContainer;
+        if (oosOwnsContainer) {
+            // OOS ha messo qualcosa di suo nel contenitore: molliamo il posto.
+            if (mGrid != null && mGrid.getParent() == mContainer) mContainer.removeView(mGrid);
+        } else {
+            // Il contenitore è di nuovo libero (vuoto o solo la nostra griglia): riprendiamocelo.
+            attachGrid();
+            mRowDirty = true;
+            refresh();
+        }
+    }
+
     private void onPanelInflated(XC_MethodHook.MethodHookParam p) {
         if (!(p.thisObject instanceof ViewGroup panel)) return;
         mContainer = panel;
+        mContainer.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override public void onViewAttachedToWindow(View v) {
+                mMediaPollHandler.removeCallbacks(mMediaPoll);
+                mMediaPollHandler.post(mMediaPoll);
+            }
+            @Override public void onViewDetachedFromWindow(View v) {
+                mMediaPollHandler.removeCallbacks(mMediaPoll);
+            }
+        });
         if (!mEnabled) return;
         mContainer.removeAllViews();
         attachGrid();
@@ -238,8 +312,11 @@ public class QsWidgetsMod extends XposedMods {
 
     private void refresh() {
         if (mContainer == null) return;
-        if (!mEnabled) {
-            if (mGrid != null && mGrid.getParent() == mContainer) {
+        if (!mEnabled || mMediaCardPresent) {
+            // mMediaCardPresent: OOS ha in questo momento la sua card nel contenitore, non
+            // aggiungere/togliere niente qui — ci pensa checkMediaCardState() a riprenderselo
+            // quando torna libero (evita di litigare con la card nativa).
+            if (!mEnabled && mGrid != null && mGrid.getParent() == mContainer) {
                 mContainer.removeView(mGrid);
             }
             return;
