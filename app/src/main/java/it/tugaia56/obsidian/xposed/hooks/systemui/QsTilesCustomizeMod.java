@@ -272,6 +272,7 @@ public class QsTilesCustomizeMod extends XposedMods {
         mTileRadiusMediaDp = Xprefs.getInt(KEY_TILE_RADIUS_MEDIA, 20);
 
         notifyQsUpdate();
+        refreshCachedIconColors();
     }
 
     private int parseInt(String s, int def) {
@@ -687,20 +688,43 @@ public class QsTilesCustomizeMod extends XposedMods {
             try {
                 hookAllMethods(iconView, "onIconTintUpdate", new XC_MethodHook() {
                     @Override protected void afterHookedMethod(MethodHookParam p) {
-                        if (!mIconColorsOn) return;
-                        try {
-                            int tileState = mTileStateCache.getOrDefault(p.thisObject, STATE_ACTIVE);
-                            int color = switch (tileState) {
-                                case STATE_ACTIVE -> mIconActiveAccent ? appAccentColor() : mIconActive;
-                                case STATE_INACTIVE -> mIconInactive;
-                                default -> mIconDisabled;
-                            };
-                            ImageView iv = (ImageView) callMethod(p.thisObject, "getIconView");
-                            iv.setImageTintList(ColorStateList.valueOf(color));
-                        } catch (Throwable t) { dbg("icon color hook failed on " + cn + ": " + t); }
+                        applyIconColorTo(p.thisObject, cn);
                     }
                 });
             } catch (Throwable t) { dbg("onIconTintUpdate hook failed on " + cn + ": " + t); }
+        }
+    }
+
+    /** Applica il colore corrente alla singola iconView (estratto da onIconTintUpdate per
+     *  poterlo richiamare anche fuori dal callback OEM — vedi refreshCachedIconColors). */
+    private void applyIconColorTo(Object iconViewInstance, String debugTag) {
+        if (!mIconColorsOn) return;
+        try {
+            int tileState = mTileStateCache.getOrDefault(iconViewInstance, STATE_ACTIVE);
+            int color = switch (tileState) {
+                case STATE_ACTIVE -> mIconActiveAccent ? appAccentColor() : mIconActive;
+                case STATE_INACTIVE -> mIconInactive;
+                default -> mIconDisabled;
+            };
+            ImageView iv = (ImageView) callMethod(iconViewInstance, "getIconView");
+            iv.setImageTintList(ColorStateList.valueOf(color));
+        } catch (Throwable t) { dbg("icon color apply failed on " + debugTag + ": " + t); }
+    }
+
+    // BUG RISOLTO 2026-08-29 ("colore icone perso dopo riavvio SystemUI", vedi
+    // project_qs_icon_refresh_bug): notifyQsUpdate() da solo dipende da mPersonalityManager,
+    // che potrebbe non esistere ancora appena dopo un riavvio (catturato solo al primo
+    // costruttore reale, timing non garantito rispetto a quando i pref sono pronti). Se un
+    // riquadro si era già disegnato PRIMA che updatePrefs() girasse la prima volta (colore
+    // default "cotto dentro"), il refresh via PersonalityManager può fallire silenziosamente
+    // e il riquadro resta scolorito finché qualcos'altro non lo ridisegna (es. un tocco).
+    // Fix: mTileStateCache è già popolata ad OGNI chiamata di setIcon(), indipendentemente da
+    // mIconColorsOn — quindi appena l'utente ha visto il pannello QS anche solo una volta,
+    // ogni vista icona nota è recuperabile da qui. Riapplichiamo il colore corrente
+    // direttamente su ognuna, bypassando del tutto la dipendenza da PersonalityManager.
+    private void refreshCachedIconColors() {
+        for (Object iconViewInstance : new ArrayList<>(mTileStateCache.keySet())) {
+            applyIconColorTo(iconViewInstance, "refresh");
         }
     }
 
